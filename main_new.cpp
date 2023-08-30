@@ -4,7 +4,7 @@
 #include<thread>
 #include<vector>
 #include<mutex>
-#include<math>
+#include<cmath>
 
 
 void SingleTileThread(int threadId, Matrix &Destination, Matrix A, Matrix B, int iterations, int i, int j, int tSize, Tensor results){
@@ -24,11 +24,11 @@ int main(int argc, char **argv){
    Tensor Piccolo(2, 4, 2);
    Tensor Grande(3, 7, 4);
 
-   Piccolo.TestTensor();
-   Grande.TestTensor();
+   Piccolo.TestValues();
+   Grande.TestValues();
 
    Tensor Coso = Piccolo || Grande;
-   Coso.PrintTensor();
+   Coso.Print();
 
 
    Matrix A(10, 5);
@@ -36,15 +36,15 @@ int main(int argc, char **argv){
 
    Matrix X(10, 6);
 
-   A.TestMatrix();
-   B.TestMatrix();
+   A.TestValues();
+   B.TestValues();
 
-   A.PrintMatrix();
-   B.PrintMatrix();
+   A.Print();
+   B.Print();
 
    cout<<"Layer di A: "<<A.Layers()<<endl;
-   A.PrintTensor();
-   A.PrintMatrix();
+   A.Print();
+   A.Print();
    cout<<A.GetElement(3, 3)<<endl;
    const int tSize = 3;
    
@@ -65,12 +65,20 @@ int main(int argc, char **argv){
    
    Tensor results(PA.Columns()/tSize + 1, PA.Rows(), PB.Columns());
 
-   results.PrintTensor();
+   results.Print();
 
    Matrix PX = X.AddTilingPadding(tSize);
 
    int i, j, k;
    int iterations = PA.Columns()/tSize + 1;
+
+  for(i=0; i<PA.Rows()/tSize; i++){
+    for(j=0; j<PB.Columns()/tSize; j++){
+      for(k=0; k<iterations; k++){
+        
+      }
+    }
+  }
 
    for(i=0; i<PA.Rows()/tSize; i++){
       for(j=0; j<PB.Columns()/tSize; j++){
@@ -97,14 +105,14 @@ int main(int argc, char **argv){
    for(auto& thread :threads){
       thread.join();
    }
-   results.PrintTensor();
+   results.Print();
    Matrix prova(2, 1);
    prova.CollapseTensor(results);
-   prova.PrintTensor();
+   prova.Print();
 
    cout<<"\n\n-------Somma--------\n\n";
    Matrix Template = A*B;
-   Template.PrintMatrix();
+   Template.Print();
 
    cout<<"Number of Threads: "<<ThN<<endl;
 

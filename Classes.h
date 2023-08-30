@@ -2,6 +2,9 @@
 #include<ctime>
 #include<vector>
 #include<thread>
+#include<mutex>
+
+std::mutex mtx;
 
 class Matrix
   {
@@ -301,6 +304,8 @@ class Matrix
     //tiling of the operands
     void GetResultTile(const Matrix& A, const Matrix& B, int iterations, int IdxArow, int IdxBcol, int tSize){
 
+      mtx.lock();
+
       for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
         //debugging
 //#ifdef VERBOSE
@@ -351,11 +356,12 @@ class Matrix
               matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
             }
 //#if defined(VERBOSE)
-            printf("Element cumulative value (%d, %d) = %d", i, j, matrixpt[i][j]);
+            printf("Element cumulative value (%d, %d) = %d\n", i, j, matrixpt[i][j]);
 //#endif
           }
         }
       }
+      mtx.unlock();
      // printf("\e[33m");
      // PrintMatrix();
      // printf("\e[0m");
@@ -394,7 +400,7 @@ class Matrix
 
 
     //tiling of the operands
-    const void MultiplyTilesOnce(const Matrix& A, const Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
+    void MultiplyTilesOnce(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
 
       printf("Prova\n");
 

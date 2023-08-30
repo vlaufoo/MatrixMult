@@ -89,8 +89,6 @@ int main(int argc, char **argv){
     int ThN = 0;
     int i, j;
 
-
-
     //testing if it works in serial execution
 
     clock_t tic_1 = clock();
@@ -104,19 +102,26 @@ int main(int argc, char **argv){
     Matrix PX = X.AddTilingPadding(tSize);
     Matrix PY = Y.AddTilingPadding(tSize);
 
-    int iterations = PA.Columns()/tSize + (PA.Columns()%tSize == 0) ? 0 : 1;
 
-    /*
-    int **result = new int* [PA.Rows()];
-    for(int i=0; i<PA.Rows(); i++){
-      result[i] = new int [PB.Columns()];
-      for(int j=0; j<PB.Columns(); j++){
-        result[i][j] = 0;
+    int iterations = PA.Columns()/tSize + 1/*(PA.Columns()%tSize == 0) ? 0 : 1*/;
+
+    cout<<"sono ancora qua";
+    int ***result;
+    result = new int** [iterations];
+    for(int k=0; k<iterations; k++){
+      cout<<k;
+      result[k] = new int* [PA.Rows()];
+      for(int i=0; i<PA.Rows(); i++){
+      cout<<i;
+        result[k][j] = new int [PB.Columns()];
+        for(int j=0; j<PB.Columns(); j++){
+      cout<<j;
+          result[k][i][j] = 0;
+        }
       }
     }
-    */
 
-
+    cout<<endl;
 
 #if defined(PRINT_NUMBERS)
     cout<<"Matrices PA and PB: \n\n";
@@ -148,7 +153,7 @@ int main(int argc, char **argv){
       }
     }
 */
-    /*
+/*
     for(i=0; i<PA.Rows()/tSize; i++){
       for(j=0; j<PB.Columns()/tSize; j++){
         for(int k=0; k<iterations; k++){
@@ -156,13 +161,16 @@ int main(int argc, char **argv){
         }
       }
     }
-    */
+*/
+    cout<<"After serial execution:\n";
+    PY.PrintMatrix();
+
     clock_t tic = clock();
 
     //parallel execution
     for(i=0; i<PA.Rows()/tSize; i++){
       for(j=0; j<PB.Columns()/tSize; j++){
-        threads.emplace_back(&Matrix::GetResultTile, Matrix(), std::ref(PA), std::ref(PB), iterations, i, j, tSize);
+ //       threads.emplace_back(&Matrix::WriteResultTile, std::ref(PY), std::ref(PA), std::ref(PB), iterations, i, j, tSize, result[0]);
         //threads.emplace_back(i, SingleTileThread, &PA);
         ThN++;
       }
@@ -171,7 +179,6 @@ int main(int argc, char **argv){
     for(auto& thread :threads){
       thread.join();
     }
-
 
     clock_t toc = clock();
 
@@ -218,13 +225,20 @@ int main(int argc, char **argv){
       }
     }
 
-    /*
-    for(i=0; i<PA.Rows(); i++){
-      delete result[i];
-      cout<<"deleted result (row "<<i<<")\n";
+
+    for(int k=0; k<iterations; k++){
+      for(i=0; i<PA.Rows(); i++){
+        for(j=0; j<PB.Columns(); j++){
+          cout<<result[k][i][j]<<"\t\t";
+        }
+        cout<<"\n\n";
+        delete result[k][i];
+        cout<<"deleted result (row "<<i<<")\n";
+      }
+      cout<<"\n\n";
+      delete[] result[k];
     }
-    delete result;
-    */
+      delete result;
   }
 
 

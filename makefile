@@ -24,6 +24,9 @@
 
 disable=0
 
+main_new: main_new.cpp Tensor.hpp makefile
+	g++ main_new.cpp Tensor.hpp -o main_new -O0 -Wall
+
 testing: testing.cpp Classes.h makefile
 	g++ testing.cpp Classes.h -D PRINT_NUMBERS -o testing -O0 -Wall 
 
