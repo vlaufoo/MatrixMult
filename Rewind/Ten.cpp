@@ -343,7 +343,7 @@ Tensor Tensor::AddTilingPadding(int tSize){
 
 Tensor Tensor::RemovePaddingRows(){
   Tensor result(depth, rows-padded_rows, columns);
-  for(k=0; k<depth; k++){
+  for(k=0; k<result.depth; k++){
     for(i=0; i<result.rows; i++){
       for(j=0; j<result.columns; j++){
         result.data[k][i][j] = data [k][i][j];
@@ -354,8 +354,8 @@ Tensor Tensor::RemovePaddingRows(){
 }
 
 Tensor Tensor::RemovePaddingColumns(){
-  Tensor result(rows, columns-padded_columns);
-  for(k=0; k<depth; k++){
+  Tensor result(depth, rows, columns-padded_columns);
+  for(k=0; k<result.depth; k++){
     for(i=0; i<result.rows; i++){
       for(j=0; j<result.columns; j++){
         result.data[k][i][j] = data [k][i][j];
@@ -366,8 +366,8 @@ Tensor Tensor::RemovePaddingColumns(){
 }
 
 Tensor Tensor::RemovePadding(){
-  Tensor result(rows-padded_rows, columns-padded_columns);
-  for(k=0; k<depth; k++){
+  Tensor result(depth-padded_layers, rows-padded_rows, columns-padded_columns);
+  for(k=0; k<result.depth; k++){
     for(i=0; i<result.rows; i++){
       for(j=0; j<result.columns; j++){
         result.data[k][i][j] = data [k][i][j];
@@ -380,10 +380,10 @@ Tensor Tensor::RemovePadding(){
 
 //tiling of the operands
 void Tensor::MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
-                               int IdxAcol, int IdxArow, int IdxBcol, int tSize){
+                               int iteration, int IdxArow, int IdxBcol, int tSize){
 
   //debugging
-  std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
+  std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<iteration<<"\n\n";
 
   if(A.columns != B.rows){
     std::cout<<"The matrices are incompatible!\n";
@@ -394,8 +394,8 @@ void Tensor::MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
   int tileCend = (IdxBcol+1)*tSize;
   int tileRstart = IdxArow*tSize;
   int tileRend = (IdxArow+1)*tSize;
-  int ThisTileStart = IdxAcol*tSize;
-  int ThisTileEnd = (IdxAcol+1)*tSize;
+  int ThisTileStart = iteration*tSize;
+  int ThisTileEnd = (iteration+1)*tSize;
 
   //adjustment for when A clumns and B rows are not multiple of tSize
   if(ThisTileEnd>A.columns){
@@ -404,19 +404,19 @@ void Tensor::MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
               <<"Last tile iteration is not square.\n"<<std::endl;
   }
 
-  //IdxAcol is equal to the iteration number so in the tile multiplication
+  //iteration is equal to the iteration number so in the tile multiplication
   //the index of the destination tile is defined with IdxBcol, instead 
-  //the inner most loop uses IdxAcol.
+  //the inner most loop uses iteration.
 
   //setting the padding rows and columns depending on the operands
   padded_rows = A.padded_rows;
   padded_columns = B.padded_columns;
 
-  if(IdxAcol == 0){
+  if(iteration == 0){
     //if it's the first iteration set destination matrix to 0)
     for(i=0; i<tSize; i++){
       for(j=0; j<tSize; j++){
-        data[IdxAcol][tileRstart+i][tileCstart+j] = 0;
+        data[iteration][tileRstart+i][tileCstart+j] = 0;
       }
     }
   }
@@ -425,9 +425,9 @@ void Tensor::MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
   for(i=tileRstart; i<tileRend; i++){
     for(j=tileCstart; j<tileCend; j++){
       for(k=ThisTileStart; k<ThisTileEnd; k++){
-        data[IdxAcol][i][j] += A.data[a_layer][i][k]*B.data[b_layer][k][j];
+        data[iteration][i][j] += A.data[a_layer][i][k]*B.data[b_layer][k][j];
       }
-      std::cout<<"Element cumulative value("<<i<<","<<j<<") = "<<data[IdxAcol][i][j]<<"\n";
+      std::cout<<"Element cumulative value("<<i<<","<<j<<") = "<<data[iteration][i][j]<<"\n";
     }
   } 
   printf("\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n");

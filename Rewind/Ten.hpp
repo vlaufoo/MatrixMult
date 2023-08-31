@@ -57,7 +57,7 @@ class Tensor
 
     //void CalculateTile(Matrix A, Matrix B, int tSize, int tRow, int tCol);
     void MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
-                           int IdxAcol, int IdxArow, int IdxBcol, int tSize);
+                           int iteration, int IdxArow, int IdxBcol, int tSize);
 
     //void MultiplyTiles(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize, Tensor& results);
 

@@ -7,7 +7,7 @@
 #include<cmath>
 
 
-void SingleTileThread(int threadId, Tensor &Destination, Tensor A, Tensor B, int iterations, int i, int j, int tSize, Tensor results){
+void SingleTileThread(int threadId, Tensor &Destination, Tensor A, Tensor B, int iterations, int i, int j, int tSize){
   //   Destination.MultiplyTilesOnce(A, B, k, i, j, tSize);
   for(int k=0; k<iterations; k++){
     Destination.MultiplyTilesOnce(A, 0, B, 0, k, i, j, tSize);
@@ -20,6 +20,7 @@ void SingleTileThread(int threadId, Tensor &Destination, Tensor A, Tensor B, int
 int main(int argc, char **argv){
 
   using namespace std;
+/* //test per l'operatore || con i tensori (funziona)
 
   Tensor Piccolo(2, 4, 2);
   Tensor Grande(3, 7, 4);
@@ -29,14 +30,14 @@ int main(int argc, char **argv){
   Grande.Random(0, 13, 123455);
 
   Piccolo.Print();
+  Grande.Print();
   Tensor Coso = Piccolo || Grande;
   Coso.Print();
-
+*/
 
   Tensor A(10, 6);
   Tensor B(6, 6);
 
-  Tensor X(10, 6);
 
   A.Random(0, 15, 7623548);
   B.Random(0, 2, 7623548);
@@ -60,35 +61,43 @@ int main(int argc, char **argv){
 
   PA.Print();
 
-  std::cout<<"Iterazioni: "<<PA.Columns()/tSize + 1<<std::endl;
 
   //   int*** results;
 
   //   results = new int** [PA.Columns()/tSize + 1];
 
-  Tensor results(PA.Columns()/tSize + 1, PA.Rows(), PB.Columns());
-
-  Tensor PX = X.AddTilingPadding(tSize);
 
   int i, j, k;
-  int iterations = PA.Columns()/tSize + 1;
+  int iterations = PA.Columns()/tSize;
+  //int iterations = PA.Columns()/tSize + (PA.Columns()%tSize == 0) ? 0 : 1;
+  if(PA.Columns()%tSize != 0)
+    iterations++;
+
+  std::cout<<"Iterazioni: "<<iterations<<std::endl;
+
+  Tensor results(iterations, PA.Rows(), PB.Columns());
+  cout<<"here is fine\n";
 
   for(i=0; i<PA.Rows()/tSize; i++){
     for(j=0; j<PB.Columns()/tSize; j++){
       for(k=0; k<iterations; k++){
-        PX.MultiplyTilesOnce(PA, 0, PB, 0, k, i, j, tSize);
+      //  results.MultiplyTilesOnce(PA, 0, PB, 0, k, i, j, tSize);
+      //  results.Print(k);
       }
     }
   }
 
   for(i=0; i<PA.Rows()/tSize; i++){
     for(j=0; j<PB.Columns()/tSize; j++){
-      threads.emplace_back([ThN, iterations, i, j, &PA, &PB, &PX, &tSize, &results]() {
-      //  SingleTileThread(ThN, PX, PA, PB, iterations, i, j, tSize, results);
+      threads.emplace_back([ThN, iterations, i, j, &PA, &PB, &tSize, &results]() {
+        SingleTileThread(ThN, results, PA, PB, iterations, i, j, tSize);
       });
       ThN++;
+      results.Print();
     }
   }
+
+  
 
 
   /*
@@ -106,14 +115,21 @@ int main(int argc, char **argv){
   for(auto& thread :threads){
     thread.join();
   }
+
+  cout<<"\n\n\n\n\n\n\n\n\n";
   results.Print();
-  Tensor prova(2, 1);
-  prova.CollapseTensor();
-  prova.Print();
+  results.CollapseTensor();
+  
+  cout<<"padding rows = "<<results.PaddingRows()<<"\n"
+      <<"padding columns = "<<results.PaddingColumns()<<"\n"
+      <<"padding layers = "<<results.PaddingLayers()<<"\n";
+
+  results = results.RemovePadding();
 
   cout<<"\n\n-------Somma--------\n\n";
   Tensor Template = A*B;
   Template.Print();
+  results.Print(0);
 
   cout<<"Number of Threads: "<<ThN<<endl;
 
