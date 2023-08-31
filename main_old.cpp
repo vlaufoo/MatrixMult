@@ -141,18 +141,6 @@ int main(int argc, char **argv){
     cout<<"\n\n\n--------------Inizio esecuzione parallela----------------\n\n\n";
 #endif
 
-    /*
-    //parallel execution
-    clock_t tic = clock();
-    for(i=0; i<PA.Rows()/tSize; i++){
-      for(j=0; j<PB.Columns()/tSize; j++){
-        threads.emplace_back([ThN, iterations, i, j, &PA, &PB, &PY, &tSize]() {
-          SingleTileThread(ThN, PY, PA, PB, iterations, i, j, tSize);
-        });
-        ThN++;
-      }
-    }
-*/
 /*
     for(i=0; i<PA.Rows()/tSize; i++){
       for(j=0; j<PB.Columns()/tSize; j++){
@@ -162,6 +150,7 @@ int main(int argc, char **argv){
       }
     }
 */
+
     cout<<"After serial execution:\n";
     PY.PrintMatrix();
 
@@ -171,7 +160,6 @@ int main(int argc, char **argv){
     for(i=0; i<PA.Rows()/tSize; i++){
       for(j=0; j<PB.Columns()/tSize; j++){
  //       threads.emplace_back(&Matrix::WriteResultTile, std::ref(PY), std::ref(PA), std::ref(PB), iterations, i, j, tSize, result[0]);
-        //threads.emplace_back(i, SingleTileThread, &PA);
         ThN++;
       }
     }
@@ -185,14 +173,6 @@ int main(int argc, char **argv){
 #if defined(PRINT_NUMBERS) 
     cout<<"Matrix X after parallel operation: \n\n";
     PY.PrintMatrix();
-    /*
-    for(i=0; i<PA.Rows(); i++){
-      for(j=0; j<PB.Columns(); j++){
-        cout<<result[i][j]<<"\t";
-      }
-      cout<<"\n\n";
-    }
-    */
     cout<<endl;
     cout<<"Parallel execution in "<<(double)(toc-tic)/CLOCKS_PER_SEC<<" seconds.\n\n";
 #endif
@@ -225,7 +205,7 @@ int main(int argc, char **argv){
       }
     }
 
-
+    //deallocazione contenitore risultati
     for(int k=0; k<iterations; k++){
       for(i=0; i<PA.Rows(); i++){
         for(j=0; j<PB.Columns(); j++){

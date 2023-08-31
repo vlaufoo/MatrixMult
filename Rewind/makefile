@@ -1,3 +1,3 @@
-main: main.cpp Ten.hpp Mat.hpp Ten.cpp Mat.cpp
-	g++ main.cpp Ten.hpp Mat.hpp Ten.cpp Mat.cpp -o main -Wall
+main: main.cpp Ten.hpp Mat.hpp Ten.cpp Mat.cpp makefile
+	g++ main.cpp Ten.hpp Ten.cpp -o main -Wall
 
