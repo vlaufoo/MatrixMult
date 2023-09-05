@@ -1,10 +1,5 @@
 #include<iostream>
-#include<ctime>
-#include<vector>
-#include<thread>
-#include<mutex>
 
-std::mutex mtx;
 
 class Matrix
   {
@@ -291,20 +286,11 @@ class Matrix
 
 
 
-
-
-
-
-
-
-
-
-
-
     //tiling of the operands
     void GetResultTile(const Matrix& A, const Matrix& B, int iterations, int IdxArow, int IdxBcol, int tSize){
 
-      mtx.lock();
+      padded_rows = A.padded_rows;
+      padded_columns = B.padded_columns;
 
       for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
         //debugging
@@ -337,8 +323,6 @@ class Matrix
         //the inner most loop uses IdxAcol.
 
         //setting the padding rows and columns depending on the operands
-        padded_rows = A.padded_rows;
-        padded_columns = B.padded_columns;
 
         if(IdxAcol == 0){
           //if it's the first iteration set destination matrix to 0)
@@ -361,7 +345,6 @@ class Matrix
           }
         }
       }
-      mtx.unlock();
      // printf("\e[33m");
      // PrintMatrix();
      // printf("\e[0m");
