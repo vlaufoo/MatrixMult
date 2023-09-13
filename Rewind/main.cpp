@@ -7,7 +7,7 @@
 #include<cmath>
 
 
-void SingleTileThread(int threadId, Tensor &Destination, Tensor A, Tensor B, int iterations, int i, int j, int tSize){
+void SingleTileThread(int threadId, Tensor& Destination, Tensor& A, Tensor& B, int iterations, int i, int j, int tSize){
   //   Destination.MultiplyTilesOnce(A, B, k, i, j, tSize);
   for(int k=0; k<iterations; k++){
     Destination.MultiplyTilesOnce(A, 0, B, 0, k, i, j, tSize);
@@ -89,9 +89,7 @@ int main(int argc, char **argv){
 
   for(i=0; i<PA.Rows()/tSize; i++){
     for(j=0; j<PB.Columns()/tSize; j++){
-      threads.emplace_back([ThN, iterations, i, j, &PA, &PB, &tSize, &results]() {
-        SingleTileThread(ThN, results, PA, PB, iterations, i, j, tSize);
-      });
+      threads.emplace_back(SingleTileThread(ThN, results, PA, PB, iterations, i, j, tSize));
       ThN++;
       results.Print();
     }

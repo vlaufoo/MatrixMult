@@ -1,5 +1,5 @@
 #include<iostream>
-
+#include<sstream>
 
 class Matrix
   {
@@ -53,11 +53,14 @@ class Matrix
     }
 
     // Copy constructor
-    Matrix(const Matrix& other) {
+    Matrix(const Matrix& other){
+
       rows = other.rows;
       columns = other.columns;
       padded_rows = other.padded_rows;
       padded_columns = other.padded_columns;
+      
+      std::cout<<"Constructing a copy of a "<<rows<<"x"<<columns<<"matrix.\n";
 
       matrixpt = new int*[rows];
       for (int i = 0; i < rows; i++) {
@@ -136,6 +139,14 @@ class Matrix
       std::cout<<"\n";
     }
 
+    void ZeroMatrix(){
+      for(i=0; i<rows; i++){
+        for(j=0; j<columns; j++){
+          matrixpt[i][j] = 0;
+        }
+      }
+    }
+
     void TestMatrix(){
       i=0;
       k=0;
@@ -171,7 +182,7 @@ class Matrix
     }
 
     //TILING FUNCTIONS
-
+/*
     //tiling of the result matrix
     void CalculateTile(Matrix A, Matrix B, int tSize, int tRow, int tCol){
       //this does the product of one tSizextSize tile, at position (tRow, tCol)
@@ -202,28 +213,37 @@ class Matrix
         }
       }
     }
+*/
 
     Matrix AddTilingPaddingRows(int tSize){
-      int padding_rows = tSize - rows%tSize -tSize*(!(bool(rows%tSize)));
+      if(rows%tSize == 0){
+        std::cout<<"Copia la matrice chiamante\n";
+        return *this;
+      }else{
+        int padding_rows = tSize - rows%tSize;
 
-      Matrix temp(rows+padding_rows, columns);
-      Matrix result = *this || temp;
-      result.padded_rows = padding_rows+padded_rows;
-      return result;
+        Matrix temp(rows+padding_rows, columns);
+        Matrix result = *this || temp;
+        result.padded_rows = padding_rows+padded_rows;
+        return result;
+      }
     }
 
     Matrix AddTilingPaddingColumns(int tSize){
-      int padding_columns = tSize - columns%tSize - tSize*(!(bool(columns%tSize)));
+      if(columns%tSize == 0){
+        return *this;
+      }else{
+        int padding_columns = tSize - columns%tSize;
 
-      Matrix temp(rows, columns+padding_columns);
-      Matrix result = *this || temp;
-      result.padded_columns = padding_columns+padded_columns;
-      return result;
+        Matrix temp(rows, columns+padding_columns);
+        Matrix result = *this || temp;
+        result.padded_columns = padding_columns+padded_columns;
+        return result;
+      }
     }
 
 
     Matrix AddPaddingRows(int padding_rows){
-
       Matrix temp(rows+padding_rows, columns);
       Matrix result = *this || temp;
       result.padded_rows = padding_rows+padded_rows;
@@ -239,14 +259,23 @@ class Matrix
     }
 
     Matrix AddTilingPadding(int tSize){
-      int padding_rows = tSize-rows%tSize - tSize*(!bool(rows%tSize));
-      int padding_columns = tSize-columns%tSize - tSize*(!bool(columns%tSize));
+      if(rows%tSize == 0 && columns%tSize == 0){
+        return *this;
+      }else{
+        int padding_rows = 0;
+        int padding_columns = 0;
 
-      Matrix temp(rows+padding_rows, columns+padding_columns);
-      Matrix result = *this || temp;
-      result.padded_rows = padding_rows + padded_rows;
-      result.padded_columns = padding_columns + padded_columns;
-      return result;
+        if(rows%tSize != 0)
+          padding_rows = tSize-rows%tSize;
+        if(columns%tSize != 0)
+          padding_columns = tSize-columns%tSize;
+
+        Matrix temp(rows+padding_rows, columns+padding_columns);
+        Matrix result = *this || temp;
+        result.padded_rows = padding_rows + padded_rows;
+        result.padded_columns = padding_columns + padded_columns;
+        return result;
+      }
     }
 
     Matrix RemovePaddingRows(){
@@ -361,41 +390,22 @@ class Matrix
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     //tiling of the operands
+
     void MultiplyTilesOnce(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
-
-      printf("Prova\n");
-
-      //debugging
 #ifdef VERBOSE
-      std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
+      std::stringstream msg;
+      msg << "\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
+      std::cout<< msg.str();
+      msg.str("");
 #endif
 
       if(A.columns != B.rows){
         std::cout<<"The matrices are incompatible!\n";
-        exit(404);
+        exit(1);
       }
+
+
       //all indices are referred to A matrix and transposed for the B matrix
       int tileCstart = IdxBcol*tSize;
       int tileCend = (IdxBcol+1)*tSize;
@@ -404,48 +414,60 @@ class Matrix
       int ThisTileEnd = (IdxAcol+1)*tSize;
       int ThisTileStart = IdxAcol*tSize;
 
-      //adjustment for when A clumns and B rows are not multiple of tSize
-      if(ThisTileEnd>A.columns){
+      //adjustment for when A columns and B rows are not multiple of tSize
+      if(ThisTileEnd > A.columns){
         ThisTileEnd = A.columns;
 #ifdef VERBOSE
-        std::cout<<"Abnormal tile encountered...................."<<std::endl;
+        std::cout<<"Abnormal tile encountered....................\n";
 #endif
       }
 
       //IdxAcol is equal to the iteration number so in the tile multiplication
-      //the index of the destination tile is defined with IdxBcol, instead 
+      //the index of the destination tile columns is defined with IdxBcol, instead 
       //the inner most loop uses IdxAcol.
 
       //setting the padding rows and columns depending on the operands
-      padded_rows = A.padded_rows;
-      padded_columns = B.padded_columns;
 
       if(IdxAcol == 0){
         //if it's the first iteration set destination matrix to 0)
-        for(i=0; i<tSize; i++){
-          for(j=0; j<tSize; j++){
+        if(IdxArow == 0 && IdxBcol == 0){
+          padded_rows = A.padded_rows;
+          padded_columns = B.padded_columns;
+        }
+
+        for(int i=0; i<tSize; i++){
+          for(int j=0; j<tSize; j++){
             matrixpt[tileRstart+i][tileCstart+j] = 0;
           }
         }
+#ifdef VERBOSE
+        std::cout<<"First iter. check is true.\n";
+#endif
       }
+      
 
       //normal matrix multiplication for one tile
-      for(i=tileRstart; i<tileRend; i++){
-        for(j=tileCstart; j<tileCend; j++){
-          for(k=ThisTileStart; k<ThisTileEnd; k++){
+      for(int i=tileRstart; i<tileRend; i++){
+        for(int j=tileCstart; j<tileCend; j++){
+          for(int k=ThisTileStart; k<ThisTileEnd; k++){
+            //std::cout<<matrixpt[i][j]<<"\n";
+            //std::cout<<A.matrixpt[i][k]<<"\n";
+            //std::cout<<B.matrixpt[8][3]<<"\n";
             matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
+//            matrixpt[i][j] += A.GetElement(i, k)*B.GetElement(k, j);
+#ifdef VERBOSE
+            msg << i<<", "<<j<<", "<<k<<"\n"<<"sum is now: "<<matrixpt[i][j]<<"\n";
+            std::cout<< msg.str();
+            msg.str("");
+#endif
           }
-#if defined(VERBOSE)
-          std::cout<<"Element cumulative value("<<i<<","<<j<<") = "<<matrixpt[i][j]<<"\n";
+#ifdef VERBOSE
+          msg << "Element "<<i<<" "<<j<<" pass "<<IdxAcol<<" done\n";
+          std::cout<<msg.str();
+          msg.str("");
 #endif
         }
       }
-      printf("\e[33m");
-      PrintMatrix();
-      printf("\e[0m");
-#if defined(VERBOSE)
-      printf("\e[93mUscita dalla funzione MultiplyTilesOnce al tile %d %d, iterazione %d\e[39mDistruzione delle variabili locali\n", IdxArow, IdxBcol, IdxAcol);
-#endif
     }
 
 

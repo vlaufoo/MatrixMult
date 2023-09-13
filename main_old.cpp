@@ -8,28 +8,20 @@
 #include<cmath>
 #include<string>
 
-/*
 void SingleTileThread(int threadId, Matrix& Destination, Matrix& A, Matrix& B, int iterations, int i, int j, int tSize){
 
   for(int k=0; k<iterations; k++){
     Destination.MultiplyTilesOnce(A, B, k, i, j, tSize);
   }
 }
-*/
-void MultiplyLoop(Matrix& PY, const Matrix& PA, const Matrix& PB, int iterations, int i, int j, int tSize) {
-  for (int k = 0; k < iterations; k++) {
-    //MultiplyTilesOnce(PY, PA, PB, i, j, tSize);
-  }
-}
+
 
 int main(int argc, char **argv){
 
   using namespace std;
-  std::osyncstream scout(std::cout);
-
 
   if(argc != 5){
-    scout<<"Number of arguments is incorrect. Set all of the necessary arguments:\n"<<
+    cout<<"Number of arguments is incorrect. Set all of the necessary arguments:\n"<<
       "Threads, Seed, Number of steps, Step height"<<endl;
     exit(-1);
   }
@@ -39,8 +31,7 @@ int main(int argc, char **argv){
   const unsigned int steps_amt =  atoi(argv[3]);
   const unsigned int step =       atoi(argv[4]);
 
-  scout<<"Arguments received: "<<threads<<" "<<seed<<" "<<steps_amt<<" "<<step<<" "<<endl;
-
+  cout<<"Arguments received: "<<threads<<" "<<seed<<" "<<steps_amt<<" "<<step<<" "<<endl;
 
   int p;
   int max = steps_amt + threads;
@@ -63,8 +54,9 @@ int main(int argc, char **argv){
 
     int tSize = 2*p*step/threads;
 
-    cout<<"tSize = "<<tSize<<endl<<endl;
-
+#ifdef PRINT_NUMBERS
+    cout<<"tSize = "<<tSize<<"\n\n";
+#endif
 
 
     Matrix A(p*step, p*step);
@@ -80,8 +72,6 @@ int main(int argc, char **argv){
     cout<<"Matrices A and B: \n\n";
     A.PrintMatrix();
     B.PrintMatrix();
-
-
 
     cout<<p*step<<" righe, "<<p*column_factor<<" colonne.\n\n";
 #endif
@@ -104,25 +94,10 @@ int main(int argc, char **argv){
     Matrix PY = Y.AddTilingPadding(tSize);
 
 
-    int iterations = PA.Columns()/tSize + 1/*(PA.Columns()%tSize == 0) ? 0 : 1*/;
+    int iterations = PA.Columns()/tSize;
+    if(PA.Columns() % tSize != 0)
+      iterations++;
 
-    cout<<"sono ancora qua";
-    int ***result;
-    result = new int** [iterations];
-    for(int k=0; k<iterations; k++){
-      cout<<k;
-      result[k] = new int* [PA.Rows()];
-      for(int i=0; i<PA.Rows(); i++){
-      cout<<i;
-        result[k][j] = new int [PB.Columns()];
-        for(int j=0; j<PB.Columns(); j++){
-      cout<<j;
-          result[k][i][j] = 0;
-        }
-      }
-    }
-
-    cout<<endl;
 
 #if defined(PRINT_NUMBERS)
     cout<<"Matrices PA and PB: \n\n";
@@ -138,10 +113,11 @@ int main(int argc, char **argv){
 #endif
 
 #if defined(PRINT_NUMBERS)
-    cout<<"\n\n\n--------------Fine esecuzione sequenziale----------------\n\n\n";
-    cout<<"\n\n\n--------------Inizio esecuzione parallela----------------\n\n\n";
+    cout<<"\n--------------Fine esecuzione sequenziale----------------\n\n";
+    cout<<"\n--------------Inizio esecuzione parallela----------------\n\n";
 #endif
 
+//test dell'esecuzione sequenziale con la MultiplyTilesOnce, ora non necessario
 /*
     for(i=0; i<PA.Rows()/tSize; i++){
       for(j=0; j<PB.Columns()/tSize; j++){
@@ -150,17 +126,18 @@ int main(int argc, char **argv){
         }
       }
     }
-*/
+
 
     cout<<"After serial execution:\n";
     PY.PrintMatrix();
+*/
 
     clock_t tic = clock();
 
     //parallel execution
     for(i=0; i<PA.Rows()/tSize; i++){
       for(j=0; j<PB.Columns()/tSize; j++){
- //       threads.emplace_back(&Matrix::WriteResultTile, std::ref(PY), std::ref(PA), std::ref(PB), iterations, i, j, tSize, result[0]);
+        threads.emplace_back(SingleTileThread, ThN, std::ref(PY), std::ref(PA), std::ref(PB), iterations, i, j, tSize);
         ThN++;
       }
     }
@@ -170,13 +147,13 @@ int main(int argc, char **argv){
     }
 
     clock_t toc = clock();
-
-#if defined(PRINT_NUMBERS) 
-    cout<<"Matrix X after parallel operation: \n\n";
+#ifdef PRINT_NUMBERS
+    cout<<"Matrix PY after parallel operation: \n\n";
     PY.PrintMatrix();
-    cout<<endl;
+    cout<<"\n";
     cout<<"Parallel execution in "<<(double)(toc-tic)/CLOCKS_PER_SEC<<" seconds.\n\n";
 #endif
+
 
 
     speedup[p-1] = ((double)(toc_1-tic_1)/(double)(toc-tic));
@@ -193,6 +170,8 @@ int main(int argc, char **argv){
         << std::fixed << (double)(toc_1-tic_1)/CLOCKS_PER_SEC << "\t"
         << (double)(toc-tic)/CLOCKS_PER_SEC << "\t"
         << speedup[p-1] << "\t";
+
+      //segnare miglior risultato per curiosità
       if(best_result < speedup[p-1]){
         best_result = speedup[p-1];
         best_dimensions = p-1;
@@ -206,20 +185,6 @@ int main(int argc, char **argv){
       }
     }
 
-    //deallocazione contenitore risultati
-    for(int k=0; k<iterations; k++){
-      for(i=0; i<PA.Rows(); i++){
-        for(j=0; j<PB.Columns(); j++){
-          cout<<result[k][i][j]<<"\t\t";
-        }
-        cout<<"\n\n";
-        delete result[k][i];
-        cout<<"deleted result (row "<<i<<")\n";
-      }
-      cout<<"\n\n";
-      delete[] result[k];
-    }
-      delete result;
   }
 
 

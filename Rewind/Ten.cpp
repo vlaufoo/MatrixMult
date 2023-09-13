@@ -49,7 +49,9 @@ Tensor::Tensor(int dep, int r, int c){
   padded_rows = 0;
   padded_columns = 0;
   padded_layers = 0;
-  std::cout<<"Generating Tensor "<<depth<<"x"<<rows<<"x"<<columns<<"\n\n";
+  std::stringstream gen;
+  gen << "Generating Tensor "<<depth<<"x"<<rows<<"x"<<columns<<"\n\n";
+  std::cout<< gen.str();
 
   data = new int** [depth];
   for(int k=0; k<depth; k++){
@@ -383,10 +385,15 @@ void Tensor::MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
                                int iteration, int IdxArow, int IdxBcol, int tSize){
 
   //debugging
-  std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<iteration<<"\n\n";
+  std::stringstream msg;
+  msg <<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<iteration<<"\n\n"; 
+  std::cout<<msg.str();
+  msg.str("");
 
   if(A.columns != B.rows){
-    std::cout<<"The matrices are incompatible!\n";
+    msg << "The matrices are incompatible!\n"; 
+    std::cout << msg.str();
+    msg.str("");
     exit(404);
   }
   //all indices are referred to A matrix and transposed for the B matrix
@@ -400,8 +407,10 @@ void Tensor::MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
   //adjustment for when A clumns and B rows are not multiple of tSize
   if(ThisTileEnd>A.columns){
     ThisTileEnd = A.columns;
-    std::cout<<"Abnormal tile encountered..................\n"
+    msg <<"Abnormal tile encountered..................\n"
               <<"Last tile iteration is not square.\n"<<std::endl;
+    std::cout<<msg.str();
+    msg.str("");
   }
 
   //iteration is equal to the iteration number so in the tile multiplication
@@ -427,10 +436,14 @@ void Tensor::MultiplyTilesOnce(Tensor& A, int a_layer, Tensor& B, int b_layer,
       for(k=ThisTileStart; k<ThisTileEnd; k++){
         data[iteration][i][j] += A.data[a_layer][i][k]*B.data[b_layer][k][j];
       }
-      std::cout<<"Element cumulative value("<<i<<","<<j<<") = "<<data[iteration][i][j]<<"\n";
+      msg <<"Element cumulative value("<<i<<","<<j<<") = "<<data[iteration][i][j]<<"\n"; 
+      std::cout<<msg.str();
+      msg.str("");
     }
-  } 
-  printf("\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n");
+  }
+  msg <<"\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n"; 
+  std::cout << msg.str();
+  msg.str("");
 }
 
 
