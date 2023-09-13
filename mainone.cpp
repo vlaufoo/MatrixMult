@@ -1,10 +1,12 @@
 #include<iostream>
+#include<ostream>
 #include<cstdio>
 #include<thread>
 #include<vector>
 #include<mutex>
 #include<cmath>
 
+  
 class Matrix
 {
 
@@ -16,6 +18,7 @@ class Matrix
     int **matrixpt;
 
   public:
+
 
     Matrix(int r, int c){
       rows = r;
@@ -32,6 +35,24 @@ class Matrix
           matrixpt[i][j] = 0;
         }
       }
+  std::cout<<"My constructor created a "<<rows<<"x"<<columns<<" matrix.\n";
+    }
+    
+    //copy constructor
+    Matrix(const Matrix& other) {
+      rows = other.rows;
+      columns = other.columns;
+      padded_rows = other.padded_rows;
+      padded_columns = other.padded_columns;
+
+      matrixpt = new int*[rows];
+      for (int i = 0; i < rows; i++) {
+        matrixpt[i] = new int[columns];
+        for (int j = 0; j < columns; j++) {
+          matrixpt[i][j] = other.matrixpt[i][j];
+        }
+      }
+      std::cout<<"Copy constructor created a "<<rows<<"x"<<columns<<" matrix.\n";
     }
 
     ~Matrix(){
@@ -79,7 +100,7 @@ class Matrix
     void MultiplyTilesOnce(Matrix A, Matrix B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
       std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
 
-      if(A.Columns() != B.Rows()){
+      if(A.columns != B.rows){
         std::cout<<"The matrices are incompatible!\n";
         exit(1);
       }
@@ -94,9 +115,9 @@ class Matrix
       int ThisTileEnd = (IdxAcol+1)*tSize;
       int ThisTileStart = IdxAcol*tSize;
 
-      //adjustment for when A clumns and B rows are not multiple of tSize
-      if(ThisTileEnd > A.Columns()){
-        ThisTileEnd = A.Columns();
+      //adjustment for when A columns and B rows are not multiple of tSize
+      if(ThisTileEnd > A.columns){
+        ThisTileEnd = A.columns;
         std::cout<<"Abnormal tile encountered...................."<<std::endl;
       }
 
@@ -115,21 +136,27 @@ class Matrix
         for(int i=0; i<tSize; i++){
           for(int j=0; j<tSize; j++){
             matrixpt[tileRstart+i][tileCstart+j] = 0;
+            std::cout<<matrixpt[tileRstart+i][tileCstart+j]<<", "<<A.matrixpt[tileRstart+i][tileCstart+j]<<"\t";
           }
+          std::cout<<"\n";
         }
         std::cout<<"First iter. check is true.\n";
       }
-
+      
 
       //normal matrix multiplication for one tile
       for(int i=tileRstart; i<tileRend; i++){
         for(int j=tileCstart; j<tileCend; j++){
           for(int k=ThisTileStart; k<ThisTileEnd; k++){
-//            matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
             std::cout<<i<<", "<<j<<", "<<k<<"\n";
-            matrixpt[i][j] += A.GetElement(i, k)*B.GetElement(k, j);
+            std::cout<<matrixpt[i][j]<<std::endl;
+            //std::cout<<matrixpt[i][j]<<"\n";
+            //std::cout<<A.matrixpt[i][k]<<"\n";
+            //std::cout<<B.matrixpt[8][3]<<"\n";
+            matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
+//            matrixpt[i][j] += A.GetElement(i, k)*B.GetElement(k, j);
           }
-          std::cout<<"Element "<<i<<" "<<j<<" pass "<<IdxAcol<<"done\n";
+          std::cout<<"Element "<<i<<" "<<j<<" pass "<<IdxAcol<<" done\n";
         }
       }
     }
@@ -188,7 +215,7 @@ I have omitted many other methods, which seem to work from the little testing i 
 */
 
 
-void SingleTileThread(Matrix& Destination, Matrix& A, Matrix& B, int iterations, int i, int j, int tSize){
+void SingleTileThread(Matrix Destination, Matrix A, Matrix B, int iterations, int i, int j, int tSize){
 
   for(int k=0; k<iterations; k++){
     Destination.MultiplyTilesOnce(A, B, k, i, j, tSize);
@@ -199,8 +226,11 @@ int main(int argc, char **argv){
 
   using namespace std;
 
-  Matrix A(12, 7);
-  Matrix B(7, 6);
+
+  cout<<__cplusplus<<"\n";
+
+  Matrix A(12, 9);
+  Matrix B(9, 6);
 
   Matrix X(12, 6);
   Matrix Y = X;
@@ -220,7 +250,7 @@ int main(int argc, char **argv){
   int tSize = 3;
   int ThN = 0;
   int i, j;
-  int iterations = A.Columns()/tSize + 1;
+  int iterations = A.Columns()/tSize + (bool)(A.Columns() % tSize) ? 1 : 0;
 
   X = A*B;
   X.PrintMatrix();
@@ -240,6 +270,7 @@ int main(int argc, char **argv){
   for(i=0; i<A.Rows()/tSize; i++){
     for(j=0; j<B.Columns()/tSize; j++){
       threads.emplace_back(SingleTileThread, ref(Y), ref(A), ref(B), iterations, i, j, tSize);
+//      this_thread::sleep_for(chrono::milliseconds(10));
       ThN++;
     }
   }

@@ -25,10 +25,11 @@ void MultiplyLoop(Matrix& PY, const Matrix& PA, const Matrix& PB, int iterations
 int main(int argc, char **argv){
 
   using namespace std;
+  std::osyncstream scout(std::cout);
 
 
   if(argc != 5){
-    cout<<"Number of arguments is incorrect. Set all of the necessary arguments:\n"<<
+    scout<<"Number of arguments is incorrect. Set all of the necessary arguments:\n"<<
       "Threads, Seed, Number of steps, Step height"<<endl;
     exit(-1);
   }
@@ -38,7 +39,7 @@ int main(int argc, char **argv){
   const unsigned int steps_amt =  atoi(argv[3]);
   const unsigned int step =       atoi(argv[4]);
 
-  cout<<"Arguments received: "<<threads<<" "<<seed<<" "<<steps_amt<<" "<<step<<" "<<endl;
+  scout<<"Arguments received: "<<threads<<" "<<seed<<" "<<steps_amt<<" "<<step<<" "<<endl;
 
 
   int p;
