@@ -27,7 +27,7 @@ class Matrix
           matrixpt[i][j] = 0;
         }
       }
-#ifdef VERBOSE
+#ifdef VERBOY
       std::cout<<"Creo matrice "<<rows<<"x"<<columns<<"\n";
 #endif
     }
@@ -47,7 +47,7 @@ class Matrix
           matrixpt[i][j] = 0;
         }
       }
-#ifdef VERBOSE
+#ifdef VERBOY
       std::cout<<"Creo matrice "<<rows<<"x"<<columns<<"\n";
 #endif
     }
@@ -60,7 +60,7 @@ class Matrix
       padded_rows = other.padded_rows;
       padded_columns = other.padded_columns;
       
-      std::cout<<"Constructing a copy of a "<<rows<<"x"<<columns<<"matrix.\n";
+      std::cout<<"Constructing a copy of a "<<rows<<"x"<<columns<<" matrix. From ("<<(void*)&other<<") to ("<<(void*)this<<")\n";
 
       matrixpt = new int*[rows];
       for (int i = 0; i < rows; i++) {
@@ -91,7 +91,7 @@ class Matrix
 
     void SetElement(int n, int m, int val){
       if(n >= rows || m >= columns){
-#ifdef VERBOSE
+#ifdef VERBOY
         std::cout<<"Invalid indices.";
 #endif
       }
@@ -100,7 +100,7 @@ class Matrix
 
     void ZeroElement(int n, int m){
       if(n >= rows || m >= columns){
-#ifdef VERBOSE
+#ifdef VERBOY
         std::cout<<"Invalid indices.";
 #endif
       }
@@ -109,7 +109,7 @@ class Matrix
 
     int GetElement(int n, int m){
       if(n >= rows || m >= columns){
-#ifdef VERBOSE
+#ifdef VERBOY
         std::cout<<"Invalid indices.";
 #endif
       }
@@ -207,13 +207,44 @@ class Matrix
           for(k=0; k<A.columns; k++){
             matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
           }
-#ifdef VERBOSE
+#ifdef VERBOY
           std::cout<<"Element ("<<i<<","<<j<<") = "<<matrixpt[i][j]<<"\n";
 #endif
         }
       }
     }
 */
+
+    Matrix ForceAddTilingPaddingRows(int tSize){
+      int padding_rows = tSize - rows%tSize;
+
+      Matrix temp(rows+padding_rows, columns);
+      Matrix result = *this || temp;
+      printf("matrice chiamante: %p, matrice ritornata: %p\n", this, &result);
+      result.padded_rows = padding_rows+padded_rows;
+      return result;
+    }
+
+    Matrix ForceAddTilingPaddingColumns(int tSize){
+      int padding_columns = tSize - columns%tSize;
+
+      Matrix temp(rows, columns+padding_columns);
+      Matrix result = *this || temp;
+      result.padded_columns = padding_columns+padded_columns;
+      return result;
+    }
+
+    Matrix ForceAddTilingPadding(int tSize){
+
+      int padding_rows = tSize-rows%tSize;
+      int padding_columns = tSize-columns%tSize;
+
+      Matrix temp(rows+padding_rows, columns+padding_columns);
+      Matrix result = *this || temp;
+      result.padded_rows = padding_rows + padded_rows;
+      result.padded_columns = padding_columns + padded_columns;
+      return result;
+    }
 
     Matrix AddTilingPaddingRows(int tSize){
       if(rows%tSize == 0){
@@ -255,6 +286,14 @@ class Matrix
       Matrix temp(rows, columns+padding_columns);
       Matrix result = *this || temp;
       result.padded_columns = padding_columns+padded_columns;
+      return result;
+    }
+
+    Matrix AddPadding(int p_r, int p_c){
+      Matrix temp(rows + p_r, columns + p_c);
+      Matrix result = *this || temp;
+      result.padded_rows = padded_rows + p_r;
+      result.padded_columns = padded_columns + p_c;
       return result;
     }
 
@@ -318,12 +357,11 @@ class Matrix
     //tiling of the operands
     void GetResultTile(const Matrix& A, const Matrix& B, int iterations, int IdxArow, int IdxBcol, int tSize){
 
-      padded_rows = A.padded_rows;
-      padded_columns = B.padded_columns;
-
+      std::stringstream msg;
+      
       for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
         //debugging
-//#ifdef VERBOSE
+//#ifdef VERBOY
         std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
 //#endif
         printf("Sono all'inizio\n");
@@ -342,7 +380,7 @@ class Matrix
         //adjustment for when A clumns and B rows are not multiple of tSize
         if(ThisTileEnd>A.columns){
           ThisTileEnd = A.columns;
-//#ifdef VERBOSE
+//#ifdef VERBOY
           std::cout<<"Abnormal tile encountered...................."<<std::endl;
 //#endif
         }
@@ -353,14 +391,28 @@ class Matrix
 
         //setting the padding rows and columns depending on the operands
 
-        if(IdxAcol == 0){
-          //if it's the first iteration set destination matrix to 0)
-          for(i=0; i<tSize; i++){
-            for(j=0; j<tSize; j++){
-              matrixpt[tileRstart+i][tileCstart+j] = 0;
-            }
+      if(IdxAcol == 0){
+        //if it's the first iteration set destination matrix to 0)
+        if(IdxArow == 0 && IdxBcol == 0){
+          padded_rows = A.padded_rows;
+          padded_columns = B.padded_columns;
+#ifdef PRINT_NUMBERS
+          std::cout<<"Beginning tiled multiplication: padding rows/columns copied from operands to result.\n";
+          msg << "Padd rows = "<<padded_rows<<" Padd cols = "<<padded_columns<<std::endl;
+          std::cout<<msg.str();
+          msg.str("");
+#endif
+        }
+
+        for(int i=0; i<tSize; i++){
+          for(int j=0; j<tSize; j++){
+            matrixpt[tileRstart+i][tileCstart+j] = 0;
           }
         }
+#ifdef VERBOY
+        std::cout<<"First iter. check is true.\n";
+#endif
+      }
 
         //normal matrix multiplication for one tile
         for(i=tileRstart; i<tileRend; i++){
@@ -368,18 +420,15 @@ class Matrix
             for(k=ThisTileStart; k<ThisTileEnd; k++){
               matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
             }
-//#if defined(VERBOSE)
-            printf("Element cumulative value (%d, %d) = %d\n", i, j, matrixpt[i][j]);
-//#endif
           }
         }
       }
      // printf("\e[33m");
      // PrintMatrix();
      // printf("\e[0m");
-//#if defined(VERBOSE)
-      printf("\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n");
-//#endif
+#ifdef VERBOY
+      std::cout<<"\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n";
+#endif
     }
 
 
@@ -393,8 +442,8 @@ class Matrix
     //tiling of the operands
 
     void MultiplyTilesOnce(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
-#ifdef VERBOSE
       std::stringstream msg;
+#ifdef VERBOY
       msg << "\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
       std::cout<< msg.str();
       msg.str("");
@@ -417,7 +466,7 @@ class Matrix
       //adjustment for when A columns and B rows are not multiple of tSize
       if(ThisTileEnd > A.columns){
         ThisTileEnd = A.columns;
-#ifdef VERBOSE
+#ifdef VERBOY
         std::cout<<"Abnormal tile encountered....................\n";
 #endif
       }
@@ -428,11 +477,18 @@ class Matrix
 
       //setting the padding rows and columns depending on the operands
 
+      
       if(IdxAcol == 0){
         //if it's the first iteration set destination matrix to 0)
         if(IdxArow == 0 && IdxBcol == 0){
           padded_rows = A.padded_rows;
           padded_columns = B.padded_columns;
+#ifdef PRINT_NUMBERS
+          std::cout<<"Beginning tiled multiplication: padding rows/columns copied from operands to result.\n";
+          msg << "Padd rows = "<<padded_rows<<" Padd cols = "<<padded_columns<<std::endl;
+          std::cout<<msg.str();
+          msg.str("");
+#endif
         }
 
         for(int i=0; i<tSize; i++){
@@ -440,11 +496,10 @@ class Matrix
             matrixpt[tileRstart+i][tileCstart+j] = 0;
           }
         }
-#ifdef VERBOSE
+#ifdef VERBOY
         std::cout<<"First iter. check is true.\n";
 #endif
       }
-      
 
       //normal matrix multiplication for one tile
       for(int i=tileRstart; i<tileRend; i++){
@@ -455,13 +510,13 @@ class Matrix
             //std::cout<<B.matrixpt[8][3]<<"\n";
             matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
 //            matrixpt[i][j] += A.GetElement(i, k)*B.GetElement(k, j);
-#ifdef VERBOSE
+#ifdef VERBOY
             msg << i<<", "<<j<<", "<<k<<"\n"<<"sum is now: "<<matrixpt[i][j]<<"\n";
             std::cout<< msg.str();
             msg.str("");
 #endif
           }
-#ifdef VERBOSE
+#ifdef VERBOY
           msg << "Element "<<i<<" "<<j<<" pass "<<IdxAcol<<" done\n";
           std::cout<<msg.str();
           msg.str("");
@@ -487,7 +542,7 @@ class Matrix
     void MultiplyTiles(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize, int** results){
 
       //debugging
-#ifdef VERBOSE
+#ifdef VERBOY
       std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
 #endif
 
@@ -506,7 +561,7 @@ class Matrix
       //adjustment for when A clumns and B rows are not multiple of tSize
       if(ThisTileEnd>A.columns){
         ThisTileEnd = A.columns;
-#ifdef VERBOSE
+#ifdef VERBOY
         std::cout<<"Abnormal tile encountered...................."<<std::endl;
 #endif
       }
@@ -544,7 +599,7 @@ class Matrix
 
       for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
         //debugging
-#ifdef VERBOSE
+#ifdef VERBOY
         std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
 #endif
 
@@ -563,7 +618,7 @@ class Matrix
         //adjustment for when A clumns and B rows are not multiple of tSize
         if(ThisTileEnd>A.columns){
           ThisTileEnd = A.columns;
-#ifdef VERBOSE
+#ifdef VERBOY
           std::cout<<"Abnormal tile encountered...................."<<std::endl;
 #endif
         }
@@ -613,7 +668,7 @@ class Matrix
         }
       }
 
-#ifdef VERBOSE
+#ifdef VERBOY
       std::cout<<"Sum done. \n";
 #endif
       return result;
@@ -639,7 +694,7 @@ class Matrix
             }else{
               result.matrixpt[i][j] = second.matrixpt[i][j];
             }
-#ifdef VERBOSE
+#ifdef VERBOY
             std::cout<<"Doing sum of element "<<i<<", "<<j<<"\n";
 #endif
           }
@@ -650,7 +705,7 @@ class Matrix
             }else{
               result.matrixpt[i][j] = 0;
             }
-#ifdef VERBOSE
+#ifdef VERBOY
             std::cout<<"Doing sum of element "<<i<<", "<<j<<"\n";
 #endif
           }
@@ -661,14 +716,14 @@ class Matrix
             }else{
               result.matrixpt[i][j] = 0;
             }
-#ifdef VERBOSE
+#ifdef VERBOY
             std::cout<<"Doing sum of element "<<i<<", "<<j<<"\n";
 #endif
           }
         }
       }
 
-#ifdef VERBOSE
+#ifdef VERBOY
       std::cout<<"Sum done. \n";
 #endif
       return result;
@@ -729,17 +784,24 @@ class Matrix
     //DESTRUCTOR
     ~Matrix(){
 #ifdef VERBOSE
-      std::cout<<"Distruggo matrice "<<rows<<"x"<<columns<<"...\n";
+      std::stringstream msg;
+      msg << "Distruggo matrice "<<rows<<"x"<<columns<<"("<<(void*)this<<")...\n";
+      std::cout << msg.str();
+      msg.str("");
 #endif
       for(i=0; i<rows; i++){
         delete[] matrixpt[i];
 #ifdef VERBOSE
-        std::cout<<"Cancellata riga "<<i<<".\n";
+      msg << "Cancellata riga "<<i<<".\n";
+      std::cout << msg.str();
+      msg.str("");
 #endif
       }
       delete[] matrixpt;
 #ifdef VERBOSE
-      std::cout<<"Cancellata tutta la matrice "<<rows<<"x"<<columns<<".\n";
+      msg << "Cancellata tutta la matrice "<<rows<<"x"<<columns<<".\n";
+      std::cout << msg.str();
+      msg.str("");
 #endif
     }
   };

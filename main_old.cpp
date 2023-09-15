@@ -8,6 +8,9 @@
 #include<cmath>
 #include<string>
 
+#define FORM_FACTOR_OPERANDS 1
+#define FORM_FACTOR_RESULT 3
+
 void SingleTileThread(int threadId, Matrix& Destination, Matrix& A, Matrix& B, int iterations, int i, int j, int tSize){
 
   for(int k=0; k<iterations; k++){
@@ -34,11 +37,11 @@ int main(int argc, char **argv){
   cout<<"Arguments received: "<<threads<<" "<<seed<<" "<<steps_amt<<" "<<step<<" "<<endl;
 
   int p;
-  int max = steps_amt + threads;
+  int max = steps_amt;
   int best_dimensions = 0;
   double speedup[max];
   double best_result = 0;
-  int column_factor = 4*step/threads;
+  int column_factor = step*FORM_FACTOR_RESULT;
 
   cout<<"Rows\tColumns\tthreads\tTile\tSerial\t\tParallel\t\tSpeedup\n";
 
@@ -50,20 +53,40 @@ int main(int argc, char **argv){
   }
 
 
-  for(p = max-1; p>0; p--){
+  for(p = max; p>0; p--){
 
-    int tSize = 2*p*step/threads;
-
-#ifdef PRINT_NUMBERS
-    cout<<"tSize = "<<tSize<<"\n\n";
-#endif
-
-
-    Matrix A(p*step, p*step);
-    Matrix B(p*step, p*column_factor);
+    Matrix A(p*step, p*step*FORM_FACTOR_OPERANDS);
+    Matrix B(p*step*FORM_FACTOR_OPERANDS, p*column_factor);
 
     Matrix X(p*step, p*column_factor);
     Matrix Y(p*step, p*column_factor);
+    
+    //find the best square tiling for this matrix (allowing for padding)
+    int div_1 = round(sqrt(threads*FORM_FACTOR_RESULT));
+    cout<<"div_1 = "<<div_1<<endl;
+    while(threads % div_1 != 0){
+      div_1 = div_1 + 1;
+    }
+
+    cout<<div_1<<"\n";
+    int div_2 = threads/div_1;
+  
+    int tSize;
+
+    if(FORM_FACTOR_RESULT >= 1){
+      tSize = X.Columns()/div_1;
+      cout<<"The tile size is "<<tSize<<", from division of columns."<<endl;
+    }else{
+      tSize = X.Rows()/div_1;
+      cout<<"The tile size is "<<tSize<<", from division of rows."<<endl;
+    }
+    cout<<"tSize = "<<tSize<<"\n\n";
+
+
+#ifdef VERBOSE
+    cout<<"tSize = "<<tSize<<"\n\n";
+#endif
+
 
     A.RandomMatrix(100, 350, seed);
     B.RandomMatrix(40, 500, seed);
@@ -80,20 +103,17 @@ int main(int argc, char **argv){
     int ThN = 0;
     int i, j;
 
-    //testing if it works in serial execution
+    //standard execution
 
     clock_t tic_1 = clock();
-
     X = A*B;
-
     clock_t toc_1 = clock();
 
-    Matrix PA = A.AddTilingPaddingRows(tSize);
-    Matrix PB = B.AddTilingPaddingColumns(tSize);
-    Matrix PX = X.AddTilingPadding(tSize);
-    Matrix PY = Y.AddTilingPadding(tSize);
-
-
+    Matrix PA = A.ForceAddTilingPaddingRows(tSize);
+    printf("Matrice destinazione (PA): %p\n", &PA);
+    Matrix PB = B.ForceAddTilingPaddingColumns(tSize);
+    Matrix PX = X.ForceAddTilingPaddingRows(tSize);
+    Matrix PY = Y.ForceAddTilingPaddingRows(tSize);
     int iterations = PA.Columns()/tSize;
     if(PA.Columns() % tSize != 0)
       iterations++;
@@ -117,20 +137,20 @@ int main(int argc, char **argv){
     cout<<"\n--------------Inizio esecuzione parallela----------------\n\n";
 #endif
 
-//test dell'esecuzione sequenziale con la MultiplyTilesOnce, ora non necessario
-/*
-    for(i=0; i<PA.Rows()/tSize; i++){
-      for(j=0; j<PB.Columns()/tSize; j++){
-        for(int k=0; k<iterations; k++){
-          PY.MultiplyTilesOnce(PA, PB, k, i, j, tSize);
-        }
-      }
-    }
-
-
-    cout<<"After serial execution:\n";
-    PY.PrintMatrix();
-*/
+//test dell'esecuzione sequenziale con la MultiplyTiles, ora non necessario
+//
+//    for(i=0; i<PA.Rows()/tSize; i++){
+//      for(j=0; j<PB.Columns()/tSize; j++){
+//        for(int k=0; k<iterations; k++){
+//          PY.MultiplyTilesOnce(PA, PB, k, i, j, tSize);
+//        }
+//      }
+//    }
+//
+//
+//    cout<<"After serial execution:\n";
+//    PY.PrintMatrix();
+//
 
     clock_t tic = clock();
 
@@ -174,7 +194,7 @@ int main(int argc, char **argv){
       //segnare miglior risultato per curiosità
       if(best_result < speedup[p-1]){
         best_result = speedup[p-1];
-        best_dimensions = p-1;
+        best_dimensions = p-1; //capisci se va corretto con p+1
         //PA.PrintMatrix();
         //PB.PrintMatrix();
         cout<<"Best result yet!\n";

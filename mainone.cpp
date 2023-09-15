@@ -3,11 +3,10 @@
 #include<cstdio>
 #include<thread>
 #include<vector>
-#include<mutex>
 #include<cmath>
 #include<chrono> 
-#include<sstream>
-  
+#include"Classes.h"
+/*  
 class Matrix
 {
 
@@ -235,10 +234,8 @@ class Matrix
     }
 
 };
-
-/*
-I have omitted many other methods, which seem to work from the little testing i have done of them.
 */
+
 
 
 void SingleTileThread(Matrix& Destination, Matrix& A, Matrix& B, int iterations, int i, int j, int tSize){
