@@ -27,7 +27,7 @@ class Matrix
           matrixpt[i][j] = 0;
         }
       }
-#ifdef VERBOY
+#ifdef VERBOSE
       std::cout<<"Creo matrice "<<rows<<"x"<<columns<<"\n";
 #endif
     }
@@ -47,7 +47,7 @@ class Matrix
           matrixpt[i][j] = 0;
         }
       }
-#ifdef VERBOY
+#ifdef VERBOSE
       std::cout<<"Creo matrice "<<rows<<"x"<<columns<<"\n";
 #endif
     }
@@ -118,7 +118,7 @@ class Matrix
 
     void SetElement(int n, int m, int val){
       if(n >= rows || m >= columns){
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"Invalid indices.";
 #endif
       }
@@ -127,7 +127,7 @@ class Matrix
 
     void ZeroElement(int n, int m){
       if(n >= rows || m >= columns){
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"Invalid indices.";
 #endif
       }
@@ -136,7 +136,7 @@ class Matrix
 
     int GetElement(int n, int m){
       if(n >= rows || m >= columns){
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"Invalid indices.";
 #endif
       }
@@ -234,7 +234,7 @@ class Matrix
           for(k=0; k<A.columns; k++){
             matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
           }
-#ifdef VERBOY
+#ifdef VERBOSE
           std::cout<<"Element ("<<i<<","<<j<<") = "<<matrixpt[i][j]<<"\n";
 #endif
         }
@@ -247,7 +247,9 @@ class Matrix
 
       Matrix temp(rows+padding_rows, columns);
       Matrix result = *this || temp;
+#ifdef VERBOSE
       printf("matrice chiamante: %p, matrice ritornata: %p\n", this, &result);
+#endif
       result.padded_rows = padding_rows+padded_rows;
       return result;
     }
@@ -388,7 +390,7 @@ class Matrix
       
       for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
         //debugging
-//#ifdef VERBOY
+//#ifdef VERBOSE
         std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
 //#endif
         printf("Sono all'inizio\n");
@@ -407,7 +409,7 @@ class Matrix
         //adjustment for when A clumns and B rows are not multiple of tSize
         if(ThisTileEnd>A.columns){
           ThisTileEnd = A.columns;
-//#ifdef VERBOY
+//#ifdef VERBOSE
           std::cout<<"Abnormal tile encountered...................."<<std::endl;
 //#endif
         }
@@ -436,7 +438,7 @@ class Matrix
             matrixpt[tileRstart+i][tileCstart+j] = 0;
           }
         }
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"First iter. check is true.\n";
 #endif
       }
@@ -453,7 +455,7 @@ class Matrix
      // printf("\e[33m");
      // PrintMatrix();
      // printf("\e[0m");
-#ifdef VERBOY
+#ifdef VERBOSE
       std::cout<<"\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n";
 #endif
     }
@@ -470,7 +472,7 @@ class Matrix
 
     void MultiplyTilesOnce(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
       std::stringstream msg;
-#ifdef VERBOY
+#ifdef VERBOSE
       msg << "\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
       std::cout<< msg.str();
       msg.str("");
@@ -493,7 +495,7 @@ class Matrix
       //adjustment for when A columns and B rows are not multiple of tSize
       if(ThisTileEnd > A.columns){
         ThisTileEnd = A.columns;
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"Abnormal tile encountered....................\n";
 #endif
       }
@@ -523,7 +525,7 @@ class Matrix
             matrixpt[tileRstart+i][tileCstart+j] = 0;
           }
         }
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"First iter. check is true.\n";
 #endif
       }
@@ -537,13 +539,13 @@ class Matrix
             //std::cout<<B.matrixpt[8][3]<<"\n";
             matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
 //            matrixpt[i][j] += A.GetElement(i, k)*B.GetElement(k, j);
-#ifdef VERBOY
+#ifdef VERBOSE
             msg << i<<", "<<j<<", "<<k<<"\n"<<"sum is now: "<<matrixpt[i][j]<<"\n";
             std::cout<< msg.str();
             msg.str("");
 #endif
           }
-#ifdef VERBOY
+#ifdef VERBOSE
           msg << "Element "<<i<<" "<<j<<" pass "<<IdxAcol<<" done\n";
           std::cout<<msg.str();
           msg.str("");
@@ -569,7 +571,7 @@ class Matrix
     void MultiplyTiles(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize, int** results){
 
       //debugging
-#ifdef VERBOY
+#ifdef VERBOSE
       std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
 #endif
 
@@ -588,7 +590,7 @@ class Matrix
       //adjustment for when A clumns and B rows are not multiple of tSize
       if(ThisTileEnd>A.columns){
         ThisTileEnd = A.columns;
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"Abnormal tile encountered...................."<<std::endl;
 #endif
       }
@@ -626,7 +628,7 @@ class Matrix
 
       for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
         //debugging
-#ifdef VERBOY
+#ifdef VERBOSE
         std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
 #endif
 
@@ -645,7 +647,7 @@ class Matrix
         //adjustment for when A clumns and B rows are not multiple of tSize
         if(ThisTileEnd>A.columns){
           ThisTileEnd = A.columns;
-#ifdef VERBOY
+#ifdef VERBOSE
           std::cout<<"Abnormal tile encountered...................."<<std::endl;
 #endif
         }
@@ -695,7 +697,7 @@ class Matrix
         }
       }
 
-#ifdef VERBOY
+#ifdef VERBOSE
       std::cout<<"Sum done. \n";
 #endif
       return result;
@@ -706,9 +708,11 @@ class Matrix
       //that value is taken as the result, so the result matrix
       //always has the most rows and most columns among the
       //operands
+#ifdef VERBOSE
       if(rows != second.rows || columns != second.columns){
         std::cout<<"\e[93mMatrix dimensions don't match in the sum operation.\e[39m\n";
       }
+#endif
       Matrix result(std::max(rows, second.rows), std::max(columns, second.columns));
 
       for(i=0; i<result.rows; i++){
@@ -721,7 +725,7 @@ class Matrix
             }else{
               result.matrixpt[i][j] = second.matrixpt[i][j];
             }
-#ifdef VERBOY
+#ifdef VERBOSE
             std::cout<<"Doing sum of element "<<i<<", "<<j<<"\n";
 #endif
           }
@@ -732,7 +736,7 @@ class Matrix
             }else{
               result.matrixpt[i][j] = 0;
             }
-#ifdef VERBOY
+#ifdef VERBOSE
             std::cout<<"Doing sum of element "<<i<<", "<<j<<"\n";
 #endif
           }
@@ -743,14 +747,14 @@ class Matrix
             }else{
               result.matrixpt[i][j] = 0;
             }
-#ifdef VERBOY
+#ifdef VERBOSE
             std::cout<<"Doing sum of element "<<i<<", "<<j<<"\n";
 #endif
           }
         }
       }
 
-#ifdef VERBOY
+#ifdef VERBOSE
       std::cout<<"Sum done. \n";
 #endif
       return result;

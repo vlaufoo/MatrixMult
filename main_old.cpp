@@ -8,14 +8,6 @@
 #include<cmath>
 #include<string>
 
-#ifndef FORM_FACTOR_OPERANDS
-  #define FORM_FACTOR_OPERANDS 1
-#endif
-
-#ifndef FORM_FACTOR_RESULT
-  #define FORM_FACTOR_RESULT 0.3 
-#endif
-
 void SingleTileThread(int threadId, Matrix& Destination, Matrix& A, Matrix& B, int iterations, int i, int j, int tSize){
 
   for(int k=0; k<iterations; k++){
@@ -28,44 +20,53 @@ int main(int argc, char **argv){
 
   using namespace std;
 
-  if(argc != 5){
+  if(argc != 7){
     cout<<"Number of arguments is incorrect. Set all of the necessary arguments:\n"<<
-      "Threads, Seed, Number of steps, Step height"<<endl;
+      "Threads, Seed, Number of steps, Step height, FormFactor of operands, FormFactor of result"
+      <<endl;
     exit(-1);
   }
 
-  const unsigned int threads =    atoi(argv[1]);
-  const unsigned int seed =       atoi(argv[2]);
-  const unsigned int steps_amt =  atoi(argv[3]);
-  const unsigned int step =       atoi(argv[4]);
+  const unsigned int threads =        atoi(argv[1]);
+  const unsigned int seed =           atoi(argv[2]);
+  const unsigned int steps_amt =      atoi(argv[3]);
+  const unsigned int step =           atoi(argv[4]);
+  const float form_factor_operands =  atof(argv[5]);
+  const float form_factor_result  =   atof(argv[6]);
 
   cout<<"Arguments received: "<<threads<<" "<<seed<<" "<<steps_amt<<" "<<step<<" "<<endl;
 
   int p;
   int max = steps_amt;
   int best_dimensions = 0;
-  double speedup[max];
+  double speedup[max + 1];
   double best_result = 0;
-  int column_factor = step*FORM_FACTOR_RESULT;
+  int column_factor = step*form_factor_result;
 
-  cout<<"Rows\tColumns\tthreads\tTile\tSerial\t\tParallel\t\tSpeedup\n";
+  cout<<"Rows\tColumns\tthreads\tTile\tOperandsFF\tResultFF\tSerial\t\tParallel\t\tSpeedup\n";
 
-  string filename = "./" + string(argv[1]) + "T_" + string(argv[2]) + ".txt";
-  FILE *fp = fopen(filename.c_str(), "w");
-  if(fp == NULL){
-    cout<<"Errore file.\n";
-    return 1;
-  }
+  string filename = "./" + string(argv[2]) + "_" + string(argv[3]) +  "_" + string(argv[4]) + ".txt";
+  FILE *fp;
 
 
   for(p = max; p>0; p--){
 
-    Matrix A(p*step, p*step*FORM_FACTOR_OPERANDS);
-    Matrix B(p*step*FORM_FACTOR_OPERANDS, p*column_factor);
+    
+    fp = fopen(filename.c_str(), "a");
+    if(fp == NULL){
+      cout<<"Errore file.\n";
+      return 1;
+    }
+
+    if(p == max)
+      fprintf(fp, "\n");
+
+    Matrix A(p*step, p*step*form_factor_operands);
+    Matrix B(p*step*form_factor_operands, p*column_factor);
 
 
-    A.RandomMatrix(100, 350, seed);
-    B.RandomMatrix(40, 500, seed);
+    A.RandomMatrix(50, 400, seed);
+    B.RandomMatrix(50, 400, seed);
 
 
     Matrix X(p*step, p*column_factor);
@@ -80,26 +81,38 @@ int main(int argc, char **argv){
     
     //find the best square tiling for this matrix (allowing for padding)
     int div_1;
-    if(FORM_FACTOR_RESULT >= 1){
-      div_1 = round(sqrt(threads*FORM_FACTOR_RESULT));
+    if(form_factor_result >= 1){
+      div_1 = round(sqrt(threads*form_factor_result));
     }else{
-      div_1 = round(sqrt(threads/FORM_FACTOR_RESULT));
+      div_1 = round(sqrt(threads/form_factor_result));
     }
 
-    cout<<"div_1 = "<<div_1<<endl;
-    while(threads % div_1 != 0){
-      div_1 = div_1 + 1;
+    if((unsigned)div_1 <= threads){
+      while(threads % div_1 != 0){
+        div_1 = div_1 + 1;
+      }
+    }else if(div_1 == 0){
+      div_1 = 1;
     }
 
     cout<<"Closest divider is "<<div_1<<"\n";
-    int div_2 = threads/div_1;
+    int div_2 = (threads/div_1 > (unsigned)div_1) ? div_1 : threads/div_1;
+    div_1 = threads/div_2;
+    if(div_2 == 0){
+      div_2 = 1;
+      div_1 = threads;
+    }
+
+    cout<<"div_1 = "<<div_1<<endl;
+
   
     int tSize;
-
-    if(FORM_FACTOR_RESULT >= 1){
-      tSize = X.Columns()/div_1;
-      if(X.Columns()%div_1 != 0)
+    if(form_factor_result >= 1){
+      tSize = X.Rows()/div_2;
+      while(X.Rows() > div_2*tSize || X.Columns() > div_1*tSize){
         tSize++;
+        //cout<<tSize<<endl;
+      }
       //calcola la dimensione tile e aggiustala se è tale che il tiling venga poi fatto
       //in modo improprio. Se le righe di X contengono tSize div_2 volte, ma con un resto 
       //allora otterremmo 3 righe di tile invece che due, quindi ridimensioniamo la tile
@@ -108,24 +121,26 @@ int main(int argc, char **argv){
       B = B.ForceAddTilingPaddingColumns(tSize, div_1);
       Y = Y.ForceAddTilingPadding(tSize, div_2, div_1);
  
-      cout<<"The tile size is "<<tSize<<", from division of columns by "<<div_1<<endl;
+      cout<<"The tile size is "<<tSize<<", from division of Rows by "<<div_2<<endl;
     }else{
-      tSize = X.Rows()/div_1 + ceil((X.Columns()%div_1)/div_1);
-      if(X.Rows()%div_1 != 0)
+      tSize = X.Columns()/div_2;
+
+      while(X.Columns() > div_2*tSize || X.Rows() > div_1*tSize){
         tSize++;
+        //cout<<tSize<<endl;
+      }
 
       A = A.ForceAddTilingPaddingRows(tSize, div_1);
       B = B.ForceAddTilingPaddingColumns(tSize, div_2);
       Y = Y.ForceAddTilingPadding(tSize, div_1, div_2);
       //stesso procedimento per questo caso
-      cout<<"The tile size is "<<tSize<<", from division of Rows by "<<div_1<<endl;
+      cout<<"The tile size is "<<tSize<<", from division of Columns by "<<div_2<<endl;
     }
-    cout<<"tSize = "<<tSize<<"\n\n";
 
-#if defined(PRINT_NUMBERS)
+    //cout<<"tSize = "<<tSize<<"\n\n";
 
-    cout<<p*step<<" righe, "<<p*column_factor<<" colonne.\n\n";
-#endif
+
+    //cout<<p*step<<" righe, "<<p*column_factor<<" colonne.\n\n";
 
 
 
@@ -147,7 +162,7 @@ int main(int argc, char **argv){
     int i, j;
 
 /*
-    if(FORM_FACTOR_RESULT >= 1){
+    if(form_factor_result >= 1){
       if(A.Rows()%tSize == 0){
         Matrix A = A;  
       }else{
@@ -230,25 +245,36 @@ int main(int argc, char **argv){
 
 
 
-    speedup[p-1] = ((double)(toc_1-tic_1)/(double)(toc-tic));
+    speedup[p] = ((double)(toc_1-tic_1)/(double)(toc-tic));
 
-    if(p == max - 1){
+    if(p == max){
 
     }else{
-      fprintf(fp, "%d\t%d\t%d\t%d\t%5f\t%5f\t%5f\t", X.Rows(), X.Columns(), ThN, tSize, (double)(toc_1-tic_1)/CLOCKS_PER_SEC, (double)(toc-tic)/CLOCKS_PER_SEC, speedup[p-1]);
+      fprintf(fp, "%d\t%d\t%d\t%d\t%f\t%f\t%5f\t%5f\t%5f\t", 
+              X.Rows(), 
+              X.Columns(), 
+              ThN, 
+              tSize, 
+              form_factor_operands, 
+              form_factor_result, 
+              (double)(toc_1-tic_1)/CLOCKS_PER_SEC, 
+              (double)(toc-tic)/CLOCKS_PER_SEC, speedup[p]
+             );
 
       std::cout << p * step << "\t"
         << p * column_factor << "\t"
         << ThN << "\t"
         << tSize << "\t"
+        << form_factor_operands << "\t"
+        << form_factor_result << "\t"
         << std::fixed << (double)(toc_1-tic_1)/CLOCKS_PER_SEC << "\t"
         << (double)(toc-tic)/CLOCKS_PER_SEC << "\t"
-        << speedup[p-1] << "\t";
+        << speedup[p] << "\t";
 
       //segnare miglior risultato per curiosità
-      if(best_result < speedup[p-1]){
-        best_result = speedup[p-1];
-        best_dimensions = p-1; //capisci se va corretto con p+1
+      if(best_result < speedup[p]){
+        best_result = speedup[p];
+        best_dimensions = p;
         //A.PrintMatrix();
         //B.PrintMatrix();
         cout<<"Best result yet!\n";
@@ -259,12 +285,12 @@ int main(int argc, char **argv){
       }
     }
 
+    fclose(fp);
   }
 
 
   cout<<"\n\n\nBest: "<<(best_result)<<" obtained with "<<best_dimensions*step<<" rows, "<<best_dimensions*column_factor<<" columns."<<endl;
 
-  fclose(fp);
 
   return 0;
 }
