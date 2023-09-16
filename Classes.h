@@ -59,9 +59,9 @@ class Matrix
       columns = other.columns;
       padded_rows = other.padded_rows;
       padded_columns = other.padded_columns;
-      
+#ifdef VERBOSE      
       std::cout<<"Constructing a copy of a "<<rows<<"x"<<columns<<" matrix. From ("<<(void*)&other<<") to ("<<(void*)this<<")\n";
-
+#endif
       matrixpt = new int*[rows];
       for (int i = 0; i < rows; i++) {
         matrixpt[i] = new int[columns];
@@ -71,6 +71,33 @@ class Matrix
       }
     }
 
+    // Copy assignment operator
+    Matrix& operator=(const Matrix& other) {
+      // Check for self-assignment
+      if (this != &other)
+      {
+        // Deallocate the current memory and allocate the new required space
+        for (int i = 0; i < rows; i++) {
+          delete[] matrixpt[i];
+        }
+        delete[] matrixpt;
+
+        // Allocate new memory
+        rows = other.rows;
+        columns = other.columns;
+        padded_rows = other.padded_rows;
+        padded_columns = other.padded_columns;
+
+        matrixpt = new int*[rows];
+        for (int i = 0; i < rows; i++) {
+          matrixpt[i] = new int[columns];
+          for (int j = 0; j < columns; j++) {
+            matrixpt[i][j] = other.matrixpt[i][j];
+          }
+        }
+      }
+      return *this;
+    }
 
     //FUNCTIONS
     int Rows(){
@@ -215,8 +242,8 @@ class Matrix
     }
 */
 
-    Matrix ForceAddTilingPaddingRows(int tSize){
-      int padding_rows = tSize - rows%tSize;
+    Matrix ForceAddTilingPaddingRows(int tSize, int tile_rows){
+      int padding_rows = tSize*tile_rows - rows;
 
       Matrix temp(rows+padding_rows, columns);
       Matrix result = *this || temp;
@@ -225,8 +252,8 @@ class Matrix
       return result;
     }
 
-    Matrix ForceAddTilingPaddingColumns(int tSize){
-      int padding_columns = tSize - columns%tSize;
+    Matrix ForceAddTilingPaddingColumns(int tSize, int tile_columns){
+      int padding_columns = tSize*tile_columns - columns;
 
       Matrix temp(rows, columns+padding_columns);
       Matrix result = *this || temp;
@@ -234,10 +261,10 @@ class Matrix
       return result;
     }
 
-    Matrix ForceAddTilingPadding(int tSize){
+    Matrix ForceAddTilingPadding(int tSize, int tile_rows, int tile_columns){
 
-      int padding_rows = tSize-rows%tSize;
-      int padding_columns = tSize-columns%tSize;
+      int padding_rows = tSize*tile_rows-rows;
+      int padding_columns = tSize*tile_columns-columns;
 
       Matrix temp(rows+padding_rows, columns+padding_columns);
       Matrix result = *this || temp;
@@ -748,35 +775,6 @@ class Matrix
         }
       }
       return result;
-    }
-
-
-    // Copy assignment operator
-    Matrix& operator=(const Matrix& other) {
-      // Check for self-assignment
-      if (this != &other)
-      {
-        // Deallocate the current memory and allocate the new required space
-        for (int i = 0; i < rows; i++) {
-          delete[] matrixpt[i];
-        }
-        delete[] matrixpt;
-
-        // Allocate new memory
-        rows = other.rows;
-        columns = other.columns;
-        padded_rows = other.padded_rows;
-        padded_columns = other.padded_columns;
-
-        matrixpt = new int*[rows];
-        for (int i = 0; i < rows; i++) {
-          matrixpt[i] = new int[columns];
-          for (int j = 0; j < columns; j++) {
-            matrixpt[i][j] = other.matrixpt[i][j];
-          }
-        }
-      }
-      return *this;
     }
 
 

@@ -35,9 +35,9 @@ main_old: main_old.o
 
 main_debug: main_old.cpp Classes.h makefile
 ifeq ($(verbose), $(disable))
-	g++ main_old.cpp Classes.h -o main_debug -D PRINT_NUMBERS -Wall 
+	g++ main_old.cpp Classes.h -o main_debug -D PRINT_NUMBERS -Wall -O0 
 else
-	g++ main_old.cpp Classes.h -o main_debug -D VERBOSE -D PRINT_NUMBERS -Wall 
+	g++ main_old.cpp Classes.h -o main_debug -D VERBOSE -D PRINT_NUMBERS -Wall -O0
 endif
 
 main_old.o: main_old.cpp Classes.h makefile

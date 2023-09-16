@@ -8,8 +8,13 @@
 #include<cmath>
 #include<string>
 
-#define FORM_FACTOR_OPERANDS 1
-#define FORM_FACTOR_RESULT 3
+#ifndef FORM_FACTOR_OPERANDS
+  #define FORM_FACTOR_OPERANDS 1
+#endif
+
+#ifndef FORM_FACTOR_RESULT
+  #define FORM_FACTOR_RESULT 0.3 
+#endif
 
 void SingleTileThread(int threadId, Matrix& Destination, Matrix& A, Matrix& B, int iterations, int i, int j, int tSize){
 
@@ -58,38 +63,76 @@ int main(int argc, char **argv){
     Matrix A(p*step, p*step*FORM_FACTOR_OPERANDS);
     Matrix B(p*step*FORM_FACTOR_OPERANDS, p*column_factor);
 
+
+    A.RandomMatrix(100, 350, seed);
+    B.RandomMatrix(40, 500, seed);
+
+
     Matrix X(p*step, p*column_factor);
     Matrix Y(p*step, p*column_factor);
+
+    //standard execution
+
+    clock_t tic_1 = clock();
+    X = A*B;
+    clock_t toc_1 = clock();
+
     
     //find the best square tiling for this matrix (allowing for padding)
-    int div_1 = round(sqrt(threads*FORM_FACTOR_RESULT));
+    int div_1;
+    if(FORM_FACTOR_RESULT >= 1){
+      div_1 = round(sqrt(threads*FORM_FACTOR_RESULT));
+    }else{
+      div_1 = round(sqrt(threads/FORM_FACTOR_RESULT));
+    }
+
     cout<<"div_1 = "<<div_1<<endl;
     while(threads % div_1 != 0){
       div_1 = div_1 + 1;
     }
 
-    cout<<div_1<<"\n";
+    cout<<"Closest divider is "<<div_1<<"\n";
     int div_2 = threads/div_1;
   
     int tSize;
 
     if(FORM_FACTOR_RESULT >= 1){
       tSize = X.Columns()/div_1;
-      cout<<"The tile size is "<<tSize<<", from division of columns."<<endl;
+      if(X.Columns()%div_1 != 0)
+        tSize++;
+      //calcola la dimensione tile e aggiustala se è tale che il tiling venga poi fatto
+      //in modo improprio. Se le righe di X contengono tSize div_2 volte, ma con un resto 
+      //allora otterremmo 3 righe di tile invece che due, quindi ridimensioniamo la tile
+      //per averne 2
+      A = A.ForceAddTilingPaddingRows(tSize, div_2);
+      B = B.ForceAddTilingPaddingColumns(tSize, div_1);
+      Y = Y.ForceAddTilingPadding(tSize, div_2, div_1);
+ 
+      cout<<"The tile size is "<<tSize<<", from division of columns by "<<div_1<<endl;
     }else{
-      tSize = X.Rows()/div_1;
-      cout<<"The tile size is "<<tSize<<", from division of rows."<<endl;
+      tSize = X.Rows()/div_1 + ceil((X.Columns()%div_1)/div_1);
+      if(X.Rows()%div_1 != 0)
+        tSize++;
+
+      A = A.ForceAddTilingPaddingRows(tSize, div_1);
+      B = B.ForceAddTilingPaddingColumns(tSize, div_2);
+      Y = Y.ForceAddTilingPadding(tSize, div_1, div_2);
+      //stesso procedimento per questo caso
+      cout<<"The tile size is "<<tSize<<", from division of Rows by "<<div_1<<endl;
     }
     cout<<"tSize = "<<tSize<<"\n\n";
+
+#if defined(PRINT_NUMBERS)
+
+    cout<<p*step<<" righe, "<<p*column_factor<<" colonne.\n\n";
+#endif
+
 
 
 #ifdef VERBOSE
     cout<<"tSize = "<<tSize<<"\n\n";
 #endif
 
-
-    A.RandomMatrix(100, 350, seed);
-    B.RandomMatrix(40, 500, seed);
 
 #if defined(PRINT_NUMBERS)
     cout<<"Matrices A and B: \n\n";
@@ -103,26 +146,37 @@ int main(int argc, char **argv){
     int ThN = 0;
     int i, j;
 
-    //standard execution
+/*
+    if(FORM_FACTOR_RESULT >= 1){
+      if(A.Rows()%tSize == 0){
+        Matrix A = A;  
+      }else{
+        Matrix A = A.AddTilingPaddingRows(tSize);
+      }
 
-    clock_t tic_1 = clock();
-    X = A*B;
-    clock_t toc_1 = clock();
+      if(B.Columns()%tSize == 0){
+        Matrix B = B; 
+      }else{
+        Matrix B = B.AddTilingPaddingColumns(tSize);
+      }
+    }
+*/
 
-    Matrix PA = A.ForceAddTilingPaddingRows(tSize);
-    printf("Matrice destinazione (PA): %p\n", &PA);
-    Matrix PB = B.ForceAddTilingPaddingColumns(tSize);
-    Matrix PX = X.ForceAddTilingPaddingRows(tSize);
-    Matrix PY = Y.ForceAddTilingPaddingRows(tSize);
-    int iterations = PA.Columns()/tSize;
-    if(PA.Columns() % tSize != 0)
+
+
+    int iterations = A.Columns()/tSize;
+    if(A.Columns() % tSize != 0)
       iterations++;
+
+#ifdef VERBOSE
+    printf("Matrice destinazione (A): %p\n", &A);
+#endif
 
 
 #if defined(PRINT_NUMBERS)
-    cout<<"Matrices PA and PB: \n\n";
-    PA.PrintMatrix();
-    PB.PrintMatrix();
+    cout<<"Matrices A and B: \n\n";
+    A.PrintMatrix();
+    B.PrintMatrix();
 #endif
 
 
@@ -138,26 +192,26 @@ int main(int argc, char **argv){
 #endif
 
 //test dell'esecuzione sequenziale con la MultiplyTiles, ora non necessario
-//
-//    for(i=0; i<PA.Rows()/tSize; i++){
-//      for(j=0; j<PB.Columns()/tSize; j++){
+
+//    for(i=0; i<A.Rows()/tSize; i++){
+//      for(j=0; j<B.Columns()/tSize; j++){
 //        for(int k=0; k<iterations; k++){
-//          PY.MultiplyTilesOnce(PA, PB, k, i, j, tSize);
+//          Y.MultiplyTilesOnce(A, B, k, i, j, tSize);
 //        }
 //      }
 //    }
-//
-//
+
+
 //    cout<<"After serial execution:\n";
-//    PY.PrintMatrix();
-//
+//    Y.PrintMatrix();
+
 
     clock_t tic = clock();
 
     //parallel execution
-    for(i=0; i<PA.Rows()/tSize; i++){
-      for(j=0; j<PB.Columns()/tSize; j++){
-        threads.emplace_back(SingleTileThread, ThN, std::ref(PY), std::ref(PA), std::ref(PB), iterations, i, j, tSize);
+    for(i=0; i<A.Rows()/tSize; i++){
+      for(j=0; j<B.Columns()/tSize; j++){
+        threads.emplace_back(SingleTileThread, ThN, std::ref(Y), std::ref(A), std::ref(B), iterations, i, j, tSize);
         ThN++;
       }
     }
@@ -168,8 +222,8 @@ int main(int argc, char **argv){
 
     clock_t toc = clock();
 #ifdef PRINT_NUMBERS
-    cout<<"Matrix PY after parallel operation: \n\n";
-    PY.PrintMatrix();
+    cout<<"Matrix Y after parallel operation: \n\n";
+    Y.PrintMatrix();
     cout<<"\n";
     cout<<"Parallel execution in "<<(double)(toc-tic)/CLOCKS_PER_SEC<<" seconds.\n\n";
 #endif
@@ -181,7 +235,7 @@ int main(int argc, char **argv){
     if(p == max - 1){
 
     }else{
-      fprintf(fp, "%d\t%d\t%d\t%d\t%5f\t%5f\t%5f\t", PX.Rows(), PX.Columns(), ThN, tSize, (double)(toc_1-tic_1)/CLOCKS_PER_SEC, (double)(toc-tic)/CLOCKS_PER_SEC, speedup[p-1]);
+      fprintf(fp, "%d\t%d\t%d\t%d\t%5f\t%5f\t%5f\t", X.Rows(), X.Columns(), ThN, tSize, (double)(toc_1-tic_1)/CLOCKS_PER_SEC, (double)(toc-tic)/CLOCKS_PER_SEC, speedup[p-1]);
 
       std::cout << p * step << "\t"
         << p * column_factor << "\t"
@@ -195,8 +249,8 @@ int main(int argc, char **argv){
       if(best_result < speedup[p-1]){
         best_result = speedup[p-1];
         best_dimensions = p-1; //capisci se va corretto con p+1
-        //PA.PrintMatrix();
-        //PB.PrintMatrix();
+        //A.PrintMatrix();
+        //B.PrintMatrix();
         cout<<"Best result yet!\n";
         fprintf(fp, "Best result yet!\n");
       }else{
