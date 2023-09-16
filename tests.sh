@@ -7,7 +7,7 @@ do
     for ffr in 1 1.3 1.7 2
     do
      echo -e "\n\e[43m\e[30m Next Iteration\n\e[0m"
-     ./main_old $t 6927348 $1 $2 $ffo $ffr
+     ./main_old $t $3 $1 $2 $ffo $ffr
     done
   done
 done
