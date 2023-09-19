@@ -20,9 +20,9 @@ int main(int argc, char **argv){
 
   using namespace std;
 
-  if(argc != 7){
+  if(argc != 8){
     cout<<"Number of arguments is incorrect. Set all of the necessary arguments:\n"<<
-      "Threads, Seed, Number of steps, Step height, FormFactor of operands, FormFactor of result"
+      "Threads, Seed, Number of steps, Step height, FormFactor of operands, FormFactor of result, Start dimensions (in steps)"
       <<endl;
     exit(-1);
   }
@@ -33,7 +33,7 @@ int main(int argc, char **argv){
   const unsigned int step =           atoi(argv[4]);
   const float form_factor_operands =  atof(argv[5]);
   const float form_factor_result  =   atof(argv[6]);
-
+  const int start_step    =           atoi(argv[7]);
   cout<<"Arguments received: "<<threads<<" "<<seed<<" "<<steps_amt<<" "<<step<<" "<<endl;
 
   int p;
@@ -45,7 +45,7 @@ int main(int argc, char **argv){
 
   cout<<"Rows\tColumns\tthreads\tTile\tOperandsFF\tResultFF\tSerial\t\tParallel\t\tSpeedup\n";
 
-  string filename = "./" + string(argv[2]) + "_" + string(argv[3]) +  "_" + string(argv[4]) + ".txt";
+  string filename = "./" + string(argv[2]) + "_" + string(argv[3]) +  "_" + string(argv[4]) + "_" + string(argv[7]) + ".txt";
   FILE *fp;
 
 
@@ -61,16 +61,16 @@ int main(int argc, char **argv){
     if(p == max)
       fprintf(fp, "\n");
 
-    Matrix A(p*step, p*step*form_factor_operands);
-    Matrix B(p*step*form_factor_operands, p*column_factor);
+    Matrix A((start_step+p)*step, (start_step+p)*step*form_factor_operands);
+    Matrix B((start_step+p)*step*form_factor_operands, (start_step+p)*column_factor);
 
 
     A.RandomMatrix(50, 400, seed);
     B.RandomMatrix(50, 400, seed);
 
 
-    Matrix X(p*step, p*column_factor);
-    Matrix Y(p*step, p*column_factor);
+    Matrix X((start_step+p)*step, (start_step+p)*column_factor);
+    Matrix Y((start_step+p)*step, (start_step+p)*column_factor);
 
     //standard execution
 
@@ -261,8 +261,8 @@ int main(int argc, char **argv){
               (double)(toc-tic)/CLOCKS_PER_SEC, speedup[p]
              );
 
-      std::cout << p * step << "\t"
-        << p * column_factor << "\t"
+      std::cout << X.Rows() << "\t"
+        << X.Columns() << "\t"
         << ThN << "\t"
         << tSize << "\t"
         << form_factor_operands << "\t"
