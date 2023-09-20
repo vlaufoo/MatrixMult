@@ -3,7 +3,7 @@
 - [Tiled Multiplication](https://github.com/vlaufoo/MatrixMult#tiled-multiplication)
 - [Program Structure](https://github.com/vlaufoo/MatrixMult#program-structure)
 - [Test Results](https://github.com/vlaufoo/MatrixMult#test-results)
-- [Compiling]
+- [Compiling](https://github.com/vlaufoo/MatrixMult#compilation)
 
 # Tiled Multiplication
 
@@ -181,12 +181,13 @@ The number of operations (multiply & add) done by one thread in this type of til
 $$Op={R^3\*OFF\*RFF \over T}+OH={MADD \over T}+OH$$
 Where _**RFF**_ and _**OFF**_ are the result matrix and operands form factors respectively, -**R**_ is the number of rows of the result matrix, and _**OH**_ is the overhead. Under these conditions, the speedup can be calculated as:
 $$Speedup={MADD \over {MADD \over T}+OH}={T \over 1+{T\*OH \over MADD}}$$
-We can conclude that, to increase the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup\to T$
+We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup\to T$
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
 ```
 make main_old
+
 ./main_old <threads> <random_seed> <step_n> <step_size> <operand_FF> <result_FF> <starting_step>
 ```
 `threads` is the number of threads to be used, and **forces** the program to use that many to make the multiplication, even if the corresponding tiling is extremely wateful (e.g. in the case of a square matrix, when `threads` is 2). `random_seed` is the seed used to randomly generate the matrix, and is given as an argument to make it easier to replicate the same testing conditions.
