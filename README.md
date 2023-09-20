@@ -200,5 +200,7 @@ Finally `operand_FF` and `result_FF` are the two form factors mentioned in the e
 
 Some other make targets are included:
 - `make_debug`: is essentially the same as main_old, but when compiled with `make verbose=0 main_debug` outputs the matrices to the output buffer, and if compiled with `make verbose=1 main_debug` also outputs debug information, also by many threads at once, without scrambling.
+  
 - `make testing`: a smaller target used for testing purposes
+  
 - The Rewind folder, which contains an extension of the Matrix class, modified to include tensors.
