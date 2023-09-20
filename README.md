@@ -1,9 +1,9 @@
 # Index
 
-- Tiled Multiplication
-- Program Structure
-- Test Results
-- Compiling
+- [Tiled Multiplication](https://github.com/vlaufoo/MatrixMult#tiled-multiplication)
+- [Program Structure](https://github.com/vlaufoo/MatrixMult#program-structure)
+- [Test Results](https://github.com/vlaufoo/MatrixMult#test-results)
+- [Compiling]
 
 # Tiled Multiplication
 
@@ -38,7 +38,7 @@ for(i=0; i<A_rows/tile_size; i++){ //row of tiles in the result matrix C
 
 In this second case the `C[i][j]` identifies a square tile in the `C` matrix, and the `*` operator should be considered a normal matrix multiplication. All the main properties of the operation transfer to the tiled version, so each result tile is only dependent on the row of tiles and the column of tiles it lies in, in the `A` matrix and `B` matrix respectively, exactly like the single elements in a normal matrix multiplication. Now we can apply the same parallelization approach to this tiled version of the algorithm and, by changing the `tile_size`, we can set the number of threads that are going to be needed to calculate the result.
 
-![Tiled_Mult.png]()
+![Tiled_Mult.png](https://github.com/vlaufoo/MatrixMult/blob/master/Tiled_Mult.png?raw=true)
 
 ## Generalization of the algorithm
 
@@ -155,22 +155,24 @@ In the first test the program (which cycles through matrix dimensions in a range
 ## Graphs
 The following graph shows the execution times of all the multiplications, for square matrices (both result and operands), with all possible degrees of parallelization.
 
-![Square_Parallel_Comparison.png](:/7fd798350c2a40e6aaf728857020bf83)
+![Square_Parallel_Comparison.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_Parallel_Comparison.png?raw=true)
+It is clear from the picture that the only configuration with an advantage over the normal one is the one with **four threads** operating in parallel. This is because the shape of the matrix lends itself to a perfectly symmetrical division in all directions. In the following image, this advantage will begin to fade as we change the shape of the result matrix (while keeping operands square).
 
-![Square_Parallel_Comparison_plus_width.png](:/03d7d7cc67914077bf7e7b467479f577)
+![Square_Parallel_Comparison_plus_width.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_Parallel_Comparison_plus_width.png?raw=true)
+The 4-threaded operation has lost its advantage and the 6-threaded one, more suitable for a 1:1.3 form factor, has gained the lead. Of course the trend continues as we make the matrix even wider, and the more parallel configurations start to become useful as they can spread their tiles wider in a 2x4 or 2x5 grid.
 
-![Square_Parallel_Comparison_double_width.png](:/d75fcd4fe02040b0b11b8016848f9530)
+![Square_Parallel_Comparison_double_width.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_Parallel_Comparison_double_width.png?raw=true)
 
-It is clear from the picture that the only configuration that has an advantage over the normal one is the one with four threads operating in parallel. This is because the shape of the matrix lends itself to a perfectly symmetrical division in all directions. In the following image, this advantage will begin to fade as we change the shape of the result matrix (while keeping operands square). The 4 threaded operation has lost its advantage and the 6 threaded one, more suitable for a 1:1.3 form factor, has gained the lead. Of course the trend continues as we make the matrix even wider, and the more parallel configurations start to become useful as they can spread their tiles wider in a 2x4 or 2x5 grid.
+
 Once the matrix becomes a 1:2 rectangle, the 2 thread, 8 thread and 10 thread solutions become more suitable for the operation as thay fit perfectly the shape of the result matrix, but the overhead associated with initializing the threads is too costly to allow the more parallelized versions to outperform the simpler two-threaded operation. Let's try to understand if this overhead is indeed caused by the initialization of the threads, or is linked to another factor. If it was only given by the threads, increasing the load of each thread, should in theory counter this problem, by spreading the lost time among more operations (multiply & add).
 With the same dataset, graphing the average Speedup across all matrix dimensions, against the operands' form factor, yields the following result:
 
-![Double_width_speedup_change_with_FFO.png](:/26aaaff970294f16b5c66013bbd45cac)
+![Double_width_speedup_change_with_FFO.png](https://github.com/vlaufoo/MatrixMult/blob/master/Double_width_speedup_change_with_FFO.png?raw=true)
 
 To better test this theory, a new dataset was created, with more changes in the opeand form factor value. Once again, the graph shows an increase in the speed of the parallel operation as more multiplications are needed on each thread.
 
-![Square_speedup_change_with_FFO.png](:/f5e28f66d3b840079348dafb97b2f827)
+![Square_speedup_change_with_FFO.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_speedup_change_with_FFO.png?raw=true)
 
 From these two images we can see not only an improvement in all configurations as the form factor increases (and thus more multiplications are done by each thread), but also that it seems to be greatest in the configuation that is already the most efficient.
 In theory this trend should continue indefinitely. The number of operations (multiply & add) done by one thead in this type of tiled multiplication is:
-&& OP = {R^3FFrFFo} &&
+$$Op={R^3\*OFF\*RFF \over T}$$ 
