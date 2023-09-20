@@ -195,7 +195,7 @@ $$Speedup={MADD \over {MADD \over T}+OH}={T \over 1+{T\*OH \over MADD}}$$
 We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup\to T$
 If we were to graph the actual curves of the execution time against the matrix size, and the estimations obtained using this simple model, we would get something like this:
 
-![Time_vs_Operand_FF_vs_rows.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows.png?raw=true)
+![Time_vs_operand_FF_vs_rows.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows.png?raw=true)
 In this picture, we have plotted the data extracted from the test program, and compared it with an estimation, for each operand form factor.
 $$t_{EX}={R^3\*FF_{op}\*FF_{res}\*t_{MADD} \over 4}$$
 except that in this case the result matrix was always square, so:
@@ -203,7 +203,8 @@ $$t_{EX}={R^3\*FF_{op}\*t_{MADD} \over 4}$$
 The value of $t_{MADD}$ was calculated from the dataset, as the average of $t_{EX} \over {R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***.
 Clearly, the model used in this case has something missing. Something is increasing the execution time for the parallel multiplication by a factor that is certainly dependent on the number of **MADD** operations. What is it?
 
-
+[Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
+The serial operation is instead well modeled, as seen in the aove picture.
 
 
 
