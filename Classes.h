@@ -432,12 +432,6 @@ class Matrix
           msg.str("");
 #endif
         }
-
-        for(int i=0; i<tSize; i++){
-          for(int j=0; j<tSize; j++){
-            matrixpt[tileRstart+i][tileCstart+j] = 0;
-          }
-        }
 #ifdef VERBOSE
         std::cout<<"First iter. check is true.\n";
 #endif
@@ -452,9 +446,7 @@ class Matrix
           }
         }
       }
-     // printf("\e[33m");
-     // PrintMatrix();
-     // printf("\e[0m");
+
 #ifdef VERBOSE
       std::cout<<"\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n";
 #endif
