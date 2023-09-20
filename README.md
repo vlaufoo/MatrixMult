@@ -199,7 +199,7 @@ make main_old
 Finally `operand_FF` and `result_FF` are the two form factors mentioned in the exposition of the previous graphs.
 
 Some other make targets are included:
-- `make_debug`: is essentially the same as main_old, but when compiled with `make verbose=0 main_debug` outputs the matrices to the output buffer, and if compiled with `make verbose=1 main_debug` also outputs debug information, also by many threads at once, without scrambling.
+- `make_debug`: is essentially the same as main_old, but when compiled with `make verbose=0 main_debug` outputs the matrices to the output buffer, and if compiled with `make verbose=1 main_debug` also outputs debug information, also by many threads at once, but keeping the messages readable.
   
 - `make testing`: a smaller target used for testing purposes
   
