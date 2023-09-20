@@ -1,9 +1,9 @@
 # Index
 
--Tiled Multiplication
--Program Structure
--Test Results
--Compiling
+- Tiled Multiplication
+- Program Structure
+- Test Results
+- Compiling
 
 # Tiled Multiplication
 
@@ -38,7 +38,7 @@ for(i=0; i<A_rows/tile_size; i++){ //row of tiles in the result matrix C
 
 In this second case the `C[i][j]` identifies a square tile in the `C` matrix, and the `*` operator should be considered a normal matrix multiplication. All the main properties of the operation transfer to the tiled version, so each result tile is only dependent on the row of tiles and the column of tiles it lies in, in the `A` matrix and `B` matrix respectively, exactly like the single elements in a normal matrix multiplication. Now we can apply the same parallelization approach to this tiled version of the algorithm and, by changing the `tile_size`, we can set the number of threads that are going to be needed to calculate the result.
 
-![Tiled_Mult.png](:/247494938e1d4b3e8a9b403385800938)
+![Tiled_Mult.png]()
 
 ## Generalization of the algorithm
 
@@ -173,4 +173,4 @@ To better test this theory, a new dataset was created, with more changes in the 
 
 From these two images we can see not only an improvement in all configurations as the form factor increases (and thus more multiplications are done by each thread), but also that it seems to be greatest in the configuation that is already the most efficient.
 In theory this trend should continue indefinitely. The number of operations (multiply & add) done by one thead in this type of tiled multiplication is:
-&&OP = {R^3FFrFFo}&&
+&& OP = {R^3FFrFFo} &&
