@@ -45,6 +45,11 @@ In this second case the `C[i][j]` identifies a square tile in the `C` matrix, an
 When looking at this approach, it seems that the result matrix must be **exactly divisible** by the intended number of square tiles, which would greatly limit our possibilities. This problem is easily solvable with the addition of **padding** rows and/or columns. By adding rows and columns of zeros to pad the matrices to the most suitable size for our tiling, we can generalize this type of multiplication, at the cost of an overhead in computation, since these rows and columns will have to be added, and the results of their multiplication will still be calculated (returning zero). To obtain a perfectly divisible `C` result matrix then, we have to add **padding rows** to the `A` matrix and **padding columns** to the `B` matrix, but making the columns of `A` (and thus the rows of `B`) divisible by `tile_size` is not strictly necessary, since the multiplication of these last tiles yields a square result tile, compatible with the result matrix new dimensions.
 In theory, if the result matrix was a perfect square, padding it to use two threads would be useless, since the second thread would only operate on a tile made entirely of padding, but to keep the results of the tests consistent, uniform and informative, these cases were included.
 
+
+
+
+
+
 # Program Structure
 
 The program was written in c++ and includes a Matrix class, written to facilitate operations between matrices and to include the tiling functions, and of course the main function that initiates all the threads.
@@ -141,6 +146,11 @@ int main(){
 Another problem encountered was the double delete problem, before the copy constructor and operator were added to fix it. This was due to the standard copy constructor only doing a shallow copy of the other object when called, and then causing problems when it was time to deallocate the memory for it, because the same pointer was used for the original and the copy.
 While the parallelization problem had not yet been solved, an attempt to solve is was made with the creation of a new class, the `Tensor` class, to be able to store the partial results in different layers of the same tensor object, and finally add the layers together, thus dividing the operation in the two *dependent* and *independent* sections already described.
 
+
+
+
+
+
 # Test Results
 
 The main program includes also the `ctime` library, to measure execution time of the serial multiplication and of the multi-threaded one, and outputs the results to a log file. After importing the log file as a table into Matlab, the data was formatted to be graphed.
@@ -183,6 +193,11 @@ $$Op={R^3\*OFF\*RFF \over T}+OH={MADD \over T}+OH$$
 Where _**RFF**_ and _**OFF**_ are the result matrix and operands form factors respectively, -**R**_ is the number of rows of the result matrix, and _**OH**_ is the overhead. Under these conditions, the speedup can be calculated as:
 $$Speedup={MADD \over {MADD \over T}+OH}={T \over 1+{T\*OH \over MADD}}$$
 We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup\to T$
+
+
+
+
+
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
