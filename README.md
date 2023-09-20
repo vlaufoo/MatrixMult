@@ -180,19 +180,19 @@ With the same dataset, graphing the average Speedup across all matrix dimensions
 
 ![Double_width_speedup_change_with_FFO.png](https://github.com/vlaufoo/MatrixMult/blob/master/Double_width_speedup_change_with_FFO.png?raw=true)
 
-To better test this theory, a new dataset was created, with more changes in the opeand form factor value. Once again, the graph shows an increase in the speed of the parallel operation as more multiplications are needed on each thread.
+Indeed a small increment in the speedup is visible, as the number of operations performed by the threads increases. To better test this theory, a new dataset was created, with more changes in the opeand form factor value. Once again, the graph shows an increase in the speed of the parallel operation as more multiplications are needed on each thread.
 
 ![Square_speedup_change_with_FFO.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_speedup_change_with_FFO.png?raw=true)
 
 From these two images we can see not only an improvement in all configurations as the form factor increases (and thus more multiplications are done by each thread), but also that it seems to be greatest in the configuation that is already the most efficient.
 
 ## Analytical model
-In theory this trend should continue indefinitely. The speedup will gradually increase as the operations increase, approaching asymptotically a value equal to the threads employed. 
+In theory, this trend should continue indefinitely. The speedup will gradually increase as the operations increase, approaching asymptotically a value equal to the threads employed. 
 The number of operations (multiply & add) done by one thread in this type of tiled multiplication is:
 $$Op={R^3\*FF_{op}\*FF_{res} \over T}+OH={MADD \over T}+OH$$
 Where $FF_{res}$ and $FF_{op}$ are the result matrix and operands form factors respectively, $R$ is the number of rows of the result matrix, and $OH$ is the overhead. Under these conditions, the speedup can be calculated as:
 $$Speedup={MADD \over {MADD \over T}+OH}={T \over 1+{T\*OH \over MADD}}$$
-We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup\to T$
+We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup \to T$
 If we were to graph the actual curves of the execution time against the matrix size, and the estimations obtained using this simple model, we would get something like this:
 
 ![Time_vs_operand_FF_vs_rows.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows.png?raw=true)
