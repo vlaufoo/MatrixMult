@@ -190,7 +190,8 @@ make main_old
 
 ./main_old <threads> <random_seed> <step_n> <step_size> <operand_FF> <result_FF> <starting_step>
 ```
-`threads` is the number of threads to be used, and **forces** the program to use that many to make the multiplication, even if the corresponding tiling is extremely wateful (e.g. in the case of a square matrix, when `threads` is 2). `random_seed` is the seed used to randomly generate the matrix, and is given as an argument to make it easier to replicate the same testing conditions.
+`threads` is the number of threads to be used, and **forces** the program to use that many to make the multiplication, even if the corresponding tiling is extremely wateful (e.g. in the case of a square matrix, when `threads` is 2).
+`random_seed` is the seed used to randomly generate the matrix, and is given as an argument to make it easier to replicate the same testing conditions.
 `step_n` `step_size` and `starting_step` are the number of steps by which the matrix size will be increased, and then the size of the steps, and the step from which the program will start.
 Finally `operand_FF` and `result_FF` are the two form factors mentioned in the exposition of the previous graphs.
 
