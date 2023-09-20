@@ -203,7 +203,7 @@ $$t_{EX}={R^3\*FF_{op}\*t_{MADD} \over 4}$$
 The value of $t_{MADD}$ was calculated from the dataset, as the average of $t_{EX} \over {R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***.
 Clearly, the model used in this case has something missing. Something is increasing the execution time for the parallel multiplication by a factor that is certainly dependent on the number of **MADD** operations. What is it?
 
-[Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
+![Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
 The serial operation is instead well modeled, as seen in the aove picture.
 
 
