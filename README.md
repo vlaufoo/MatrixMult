@@ -204,7 +204,7 @@ The value of $t_{MADD}$ was calculated from the dataset, as the average of $t_{E
 Clearly, the model used in this case has something missing. Something is increasing the execution time for the parallel multiplication by a factor that is certainly dependent on the number of **MADD** operations. What is it?
 
 ![Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
-The serial operation is instead well modeled, as seen in the aove picture.
+The serial operation is instead well modeled, as seen in the above picture.
 
 
 
