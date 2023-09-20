@@ -204,4 +204,4 @@ Some other make targets are included:
   
 - `make testing`: a smaller target used for testing purposes
   
-- The Rewind folder, which contains an extension of the Matrix class, modified to include tensors.
+- The [Rewind](https://github.com/vlaufoo/MatrixMult/tree/master/Rewind) folder, which also contains another `Tensor` class, with a few new methods, to extend the usecases of the original program.
