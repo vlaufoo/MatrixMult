@@ -54,14 +54,14 @@ The Matrix class includes:
 - A constructor, to dynamically allocate the matrix.
 - A copy constructor.
 - A destructor, to correctly deallocate the memory.
-- A few operators (sum, normal multiplication, an custom || operator to aid with padding, a copy operator to avoid double delete errors) which override their normal meaning.
+- A few operators (sum, normal multiplication, a custom || operator to aid with padding, a copy operator to avoid double delete errors) which override their normal meaning.
 - A few get/set methods, since the members are private.
 - A few methods specifically created to prep the matrices for multiplication (padding addition, padding removal etc.)
 - The tiled multiplication function, that will be described in the following paragraph.
 
 ## The tiled multiplication method
 
-The `MultiplyTilesOnce` method in the Matrix class is the "kernel" of the tiled matrix multiplication. In ths scaled down version of the tiled multiplication algorithm, each thread will repeat this kernel for as many times as there are columns of tiles in the `A` matrix, so that it is completely independent of the other threads, but in other, more complete forms, the threads could first do all matrix multiplications between tiles, and then all the additions to get the final result, splitting the operation in its *"independent"* and *"dependent"* components, and doing the second part only when all the partial results are ready. In our case, the function itself is nothing more than an adaptation of the normal matrix multiplication, using the index of the result tile and the number of the kernel iteration as points of reference, applied only to one tile:
+The `MultiplyTilesOnce` method in the Matrix class is the "kernel" of the tiled matrix multiplication. In ths scaled down version of the tiled multiplication algorithm, each thread will repeat this kernel for as many times as there are columns of tiles in the `A` matrix, so that it is completely independent of the other threads. In other, more complete forms, the threads could first do all multiplications between tiles, and then all the additions to get the final result, splitting the operation in its *"data-independent"* and *"data-dependent"* components, and doing the second part only when all the partial results are ready. In our case, the function itself is nothing more than an adaptation of the normal matrix multiplication, using the index of the result tile and the number of the kernel iteration as points of reference, applied only to one tile:
 
 ```c++
         void MultiplyTilesOnce(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
@@ -122,8 +122,8 @@ After all threads have concluded their part of the operation, they are rejoined 
 
 ## Challenges
 
-The main challenges of this project, after the first steps of creating the class and the main methods, have been regarding the correct initialization of threads, and have been caused possibly by the late implementation of a readable debug output, to troubleshoot the problems as they came up. It is possible that some of the difficulties encountered in making the parallel execution work were due to the use of the `tsd::cout` function, and in particular the improper use of the `<<` operator.
-When using `std::cout` the `<<` operator can be used to concatenate strings to send them to the output buffer. The operator itself is atomic, so if used only once it cannot be scrambled or interrupted by opther threads, but using it may times in the same `std::cout` hase the same oeffect of calling the function multiple times. Between each call other threads can insert their own output, making the result unreadable. The solution was to compose the message before sending it to buffer, and the send it all at once. This does not guarantee that all messages are in "chronological order", but that they are all readable.
+The main challenges of this project, after the first steps of creating the class and the main methods, have been regarding the correct initialization of threads, and have been caused in part by the late implementation of a readable debug output, to troubleshoot the problems as they came up. It is possible that some of the difficulties encountered in making the parallel execution work were due to the use of the `std::cout` function, and in particular the improper use of the `<<` operator.
+When using `std::cout` the `<<` operator can be used to concatenate strings to send them to the output buffer. The operator itself is atomic, so if used only once it cannot be scrambled or interrupted by opther threads, but using it many times in the same `std::cout` has the same effect of calling the function multiple times. Between each call other threads can insert their own output, making the result unreadable. The solution was to compose the message before sending it to buffer, using another standard library and then send it all at once. This does not guarantee that all messages are in "chronological order", but only that they are all readable.
 
 ```c++
 #include<iostream>
@@ -139,6 +139,7 @@ int main(){
 ```
 
 Another problem encountered was the double delete problem, before the copy constructor and operator were added to fix it. This was due to the standard copy constructor only doing a shallow copy of the other object when called, and then causing problems when it was time to deallocate the memory for it, because the same pointer was used for the original and the copy.
+While the parallelization problem had not yet been solved, an attempt to solve is was made with the creation of a new class, the `Tensor` class, to be able to store the partial results in different layers of the same tensor object, and finally add the layers together, thus dividing the operation in the two *dependent* and *independent* sections already described.
 
 # Test Results
 
