@@ -73,9 +73,11 @@ int main(int argc, char **argv){
     Matrix Y((start_step+p)*step, (start_step+p)*column_factor);
 
     //standard execution
+/*
     clock_t tic_1 = clock();
     X = A*B;
     clock_t toc_1 = clock();
+*/
     
     //find the best square tiling for this matrix (allowing for padding)
     int div_1;
@@ -140,7 +142,9 @@ int main(int argc, char **argv){
 
     //cout<<p*step<<" righe, "<<p*column_factor<<" colonne.\n\n";
 
-
+    //testing if the loop function is slowing down the operation
+    Matrix T = Y;
+    T.PrintMatrix();
 
 #ifdef VERBOSE
     cout<<"tSize = "<<tSize<<"\n\n";
@@ -197,7 +201,7 @@ int main(int argc, char **argv){
 #if defined(PRINT_NUMBERS)
     cout<<"Matrix X after serial operation: \n\n";
     X.PrintMatrix();
-    cout<<"Serial execution in "<<(double)(toc_1 - tic_1)/CLOCKS_PER_SEC<<" seconds.\n\n";
+//    cout<<"Serial execution in "<<(double)(toc_1 - tic_1)/CLOCKS_PER_SEC<<" seconds.\n\n";
 #endif
 
 #if defined(PRINT_NUMBERS)
@@ -219,6 +223,21 @@ int main(int argc, char **argv){
 //    cout<<"After serial execution:\n";
 //    Y.PrintMatrix();
 
+
+
+    clock_t tic_1 = clock();
+    //parallel execution
+    for(i=0; i<A.Rows()/tSize; i++){
+      for(j=0; j<B.Columns()/tSize; j++){
+        tiles.emplace_back(std::ref(&Matrix::GetResultTile, std::ref(T), std::ref(A), std::ref(B), iterations, i, j, tSize);
+      }
+    }
+
+    for(auto& thread :tiles){
+      thread.join();
+    }
+
+    clock_t toc_1 = clock();
 
 #ifdef PRINT_NUMBERS
     cout<<"Matrix T after parallel operation: \n\n";
