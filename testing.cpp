@@ -46,7 +46,7 @@ int main(int argc, char **argv){
   A.PrintMatrix();
   B.PrintMatrix();
 
-  int tSize = 3;
+  int tSize = 6;
 
   Matrix PA = A.AddTilingPaddingRows(tSize);
   Matrix PB = B.AddTilingPaddingColumns(tSize);
@@ -64,28 +64,27 @@ int main(int argc, char **argv){
 
   int ThN = 0;
   int i, j, k;
-  int iterations = PA.Columns()/tSize + 1;
+  int iterations = PA.Columns()/tSize;
+  if(PA.Columns()%tSize != 0)
+    iterations++;
 
-  PX = PA*PB;
-  PX.PrintMatrix();
-/*
+  //PX = PA*PB;
+  //PX.PrintMatrix();
   //	PX.PrintMatrix();	
   //serial execution
   for(i=0; i<PA.Rows()/tSize; i++){
     for(j=0; j<PB.Columns()/tSize; j++){
-      for(int k=0; k<iterations; k++){
-        PY.MultiplyTilesOnce(PA, PB, k, i, j, tSize);
-      }
+      cout<<"Prova\n";
+      //PY.GetResultTile(PA, PB, iterations, i, j, tSize);
     }
   }
-*/
 
   //pariallel execution
     for(i=0; i<A.Rows()/tSize; i++){
       for(j=0; j<B.Columns()/tSize; j++){
-        threads.emplace_back(SingleTileThread, std::ref(Y), std::ref(A), std::ref(B), iterations, i, j, tSize);
+        //threads.emplace_back(SingleTileThread, std::ref(Y), std::ref(A), std::ref(B), iterations, i, j, tSize);
 //        threads.emplace_back(SingleTileThread, std::ref(PY), std::ref(PA), std::ref(PB), iterations, i, j, tSize);
-       // threads.emplace_back(i, SingleTileThread, &PA);
+        threads.emplace_back(&Matrix::GetResultTile, ref(PY), ref(PA), ref(PB), iterations, i, j, tSize);
         ThN++;
       }
     }
@@ -108,7 +107,7 @@ int main(int argc, char **argv){
 //  PY.GetResultTile(PA, PB, iterations, 2, 0, tSize);
 //  PY.GetResultTile(PA, PB, iterations, 2, 1, tSize);
 
-  Y.PrintMatrix();
+  PY.PrintMatrix();
 
 //  cout<<"Number of Threads: "<<ThN<<endl;
 //  

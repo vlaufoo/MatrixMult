@@ -28,16 +28,16 @@ main_new: main_new.cpp Tensor.hpp makefile
 	g++ main_new.cpp Tensor.hpp -o main_new -O0 -Wall
 
 testing: testing.cpp Classes.h makefile
-	g++ testing.cpp Classes.h -D PRINT_NUMBERS -o testing -Wall 
+	g++ testing.cpp Classes.h -D PRINT_NUMBERS -D VERBOSE -o testing -Wall 
 
 main_old: main_old.o
 	g++ main_old.o -o main_old
 
 main_debug: main_old.cpp Classes.h makefile
 ifeq ($(verbose), $(disable))
-	g++ main_old.cpp Classes.h -o main_debug -D PRINT_NUMBERS -Wall -O0 
+	g++ main_old.cpp Classes.h -o main_debug -D PRINT_NUMBERS -Wall  
 else
-	g++ main_old.cpp Classes.h -o main_debug -D VERBOSE -D PRINT_NUMBERS -Wall -O0
+	g++ main_old.cpp Classes.h -o main_debug -D VERBOSE -D PRINT_NUMBERS -Wall 
 endif
 
 main_old.o: main_old.cpp Classes.h makefile

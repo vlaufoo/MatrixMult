@@ -384,7 +384,7 @@ class Matrix
 
 
     //tiling of the operands
-    void GetResultTile(Matrix& A, Matrix& B, int iterations, int IdxArow, int IdxBcol, int tSize){
+    void GetResultTile(Matrix &A, Matrix &B, int iterations, int IdxArow, int IdxBcol, int tSize){
 
       std::stringstream msg;
       
@@ -441,6 +441,9 @@ class Matrix
         for(i=tileRstart; i<tileRend; i++){
           for(j=tileCstart; j<tileCend; j++){
             for(k=ThisTileStart; k<ThisTileEnd; k++){
+              msg<<i<<", "<<j<<", "<<k<<"\n";
+              std::cout<<msg.str();
+              msg.str("");
               matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
             }
           }
