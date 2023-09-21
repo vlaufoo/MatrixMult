@@ -175,19 +175,19 @@ The 4-threaded operation has lost its advantage and the 6-threaded one, more sui
 ![Square_Parallel_Comparison_double_width.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_Parallel_Comparison_double_width.png?raw=true)
 
 
-Once the matrix becomes a 1:2 rectangle, the 2 thread, 8 thread and 10 thread solutions become more suitable for the operation as thay fit perfectly the shape of the result matrix, but the overhead associated with initializing the threads is too costly to allow the more parallelized versions to outperform the simpler two-threaded operation. Let's try to understand if this overhead is indeed caused by the initialization of the threads, or is linked to another factor. If it was only given by the threads, increasing the load of each thread, should in theory counter this problem, by spreading the lost time among more operations (multiply & add).
+Once the matrix becomes a 1:2 rectangle, the 2 thread, 8 thread and 10 thread solutions become more suitable for the operation as thay fit perfectly the shape of the result matrix, but the overhead associated with initializing the threads is too costly to allow the more parallelized versions to outperform the simpler two-threaded operation. Let's try to understand if this overhead is indeed caused by the initialization of the threads, or is linked to another factor. If it was given, at least in part, by the threads, increasing the load of each thread, should in theory counter this problem, by spreading the lost time among more operations (multiply & add).
 With the same dataset, graphing the average Speedup across all matrix dimensions, against the operands' form factor, yields the following result:
 
 ![Double_width_speedup_change_with_FFO.png](https://github.com/vlaufoo/MatrixMult/blob/master/Double_width_speedup_change_with_FFO.png?raw=true)
 
-Indeed a small increment in the speedup is visible, as the number of operations performed by the threads increases. To better test this theory, a new dataset was created, with more changes in the opeand form factor value. Once again, the graph shows an increase in the speed of the parallel operation as more multiplications are needed on each thread.
+Indeed a small increment in the speedup is visible, as the number of operations performed by the threads increases. To better test this theory, a new dataset was created, with more changes in the opeand form factor value. Once again, the graph shows an increase in the relative speed of the parallel operation when more multiplications are needed on each thread.
 
 ![Square_speedup_change_with_FFO.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_speedup_change_with_FFO.png?raw=true)
 
-From these two images we can see not only an improvement in all configurations as the form factor increases (and thus more multiplications are done by each thread), but also that it seems to be greatest in the configuation that is already the most efficient.
+In these two images we can also notice that the improvement seems to be greatest in the configuation that is already the most efficient.
 
 ## Analytical model
-In theory, this trend should continue indefinitely. The speedup will gradually increase as the operations increase, approaching asymptotically a value equal to the threads employed. 
+In theory, this positive trend should continue indefinitely. The speedup will gradually increase as the operations increase, approaching asymptotically a value equal to the threads employed. 
 The number of operations (multiply & add) done by one thread in this type of tiled multiplication is:
 $$Op={FF_{op} \times FF_{res} \times R^3 \over T}+OH={MADD \over T}+OH$$
 Where $FF_{res}$ and $FF_{op}$ are the result matrix and operands form factors respectively, $R$ is the number of rows of the result matrix, and $OH$ is the overhead. Under these conditions, the speedup can be calculated as:
