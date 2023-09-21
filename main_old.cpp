@@ -229,7 +229,7 @@ int main(int argc, char **argv){
     //parallel execution
     for(i=0; i<A.Rows()/tSize; i++){
       for(j=0; j<B.Columns()/tSize; j++){
-        tiles.emplace_back(std::ref(Matrix::GetResultTile), std::ref(T), std::ref(A), std::ref(B), iterations, i, j, tSize);
+        tiles.emplace_back(std::ref(&Matrix::GetResultTile, std::ref(T), std::ref(A), std::ref(B), iterations, i, j, tSize);
       }
     }
 

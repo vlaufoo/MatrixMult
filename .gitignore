@@ -3,3 +3,4 @@ main_old
 main_debug
 mainone
 testing
+*.o
