@@ -7,8 +7,8 @@
 
 # Tiled Multiplication
 
-Traditional matrix multiplication is an iterative operation that repeats a **multiply & accumulate** step, for each element in the result matrix, a number of times that is equal to the columns of the first operand (or rows of the second operand).
-In the case of `C = A*B`, the C code that describes the multiplication is:
+Traditional matrix multiplication is an iterative operation that repeats a **multiply & accumulate** step, for each element in the result matrix, a number of times that is equal to the columns of the first operand (rows of the second operand).
+In the case of $C = A \cdot B$, the C code that describes the multiplication is:
 
 ```c++
 for(i=0; i<A_rows; i++){ //row of the result matrix C (equal to row of the operand A)
@@ -189,9 +189,9 @@ From these two images we can see not only an improvement in all configurations a
 ## Analytical model
 In theory, this trend should continue indefinitely. The speedup will gradually increase as the operations increase, approaching asymptotically a value equal to the threads employed. 
 The number of operations (multiply & add) done by one thread in this type of tiled multiplication is:
-$$Op={R^3\*FF_{op}\*FF_{res} \over T}+OH={MADD \over T}+OH$$
+$$Op={FF_{op} \times FF_{res} \times R^3 \over T}+OH={MADD \over T}+OH$$
 Where $FF_{res}$ and $FF_{op}$ are the result matrix and operands form factors respectively, $R$ is the number of rows of the result matrix, and $OH$ is the overhead. Under these conditions, the speedup can be calculated as:
-$$Speedup={MADD \over {MADD \over T}+OH}={T \over 1+{T\*OH \over MADD}}$$
+$$Speedup={MADD \over {MADD \over T}+OH}={T \over 1+{T \times OH \over MADD}}$$
 We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup \to T$
 If we were to graph the actual curves of the execution time against the matrix size, and the estimations obtained using this simple model, we would get something like this:
 
@@ -230,3 +230,4 @@ Some other make targets are included:
 - `make testing`: a smaller target used for testing purposes
   
 - The [Rewind](https://github.com/vlaufoo/MatrixMult/tree/master/Rewind) folder, which also contains another `Tensor` class, with a few new methods, to extend the usecases of the original program.
+
