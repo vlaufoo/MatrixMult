@@ -384,16 +384,16 @@ class Matrix
 
 
     //tiling of the operands
-    void GetResultTile(const Matrix& A, const Matrix& B, int iterations, int IdxArow, int IdxBcol, int tSize){
+    void GetResultTile(Matrix& A, Matrix& B, int iterations, int IdxArow, int IdxBcol, int tSize){
 
       std::stringstream msg;
       
       for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
         //debugging
-//#ifdef VERBOSE
+#ifdef VERBOSE
         std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
-//#endif
         printf("Sono all'inizio\n");
+#endif
         if(A.columns != B.rows){
           std::cout<<"The matrices are incompatible!\n";
           exit(404);
@@ -409,9 +409,9 @@ class Matrix
         //adjustment for when A clumns and B rows are not multiple of tSize
         if(ThisTileEnd>A.columns){
           ThisTileEnd = A.columns;
-//#ifdef VERBOSE
+#ifdef VERBOSE
           std::cout<<"Abnormal tile encountered...................."<<std::endl;
-//#endif
+#endif
         }
 
         //IdxAcol is equal to the iteration number so in the tile multiplication
@@ -420,22 +420,22 @@ class Matrix
 
         //setting the padding rows and columns depending on the operands
 
-      if(IdxAcol == 0){
-        //if it's the first iteration set destination matrix to 0)
-        if(IdxArow == 0 && IdxBcol == 0){
-          padded_rows = A.padded_rows;
-          padded_columns = B.padded_columns;
+        if(IdxAcol == 0){
+          //if it's the first iteration set destination matrix to 0)
+          if(IdxArow == 0 && IdxBcol == 0){
+            padded_rows = A.padded_rows;
+            padded_columns = B.padded_columns;
 #ifdef PRINT_NUMBERS
-          std::cout<<"Beginning tiled multiplication: padding rows/columns copied from operands to result.\n";
-          msg << "Padd rows = "<<padded_rows<<" Padd cols = "<<padded_columns<<std::endl;
-          std::cout<<msg.str();
-          msg.str("");
+            std::cout<<"Beginning tiled multiplication: padding rows/columns copied from operands to result.\n";
+            msg << "Padd rows = "<<padded_rows<<" Padd cols = "<<padded_columns<<std::endl;
+            std::cout<<msg.str();
+            msg.str("");
+#endif
+          }
+#ifdef VERBOSE
+          std::cout<<"First iter. check is true.\n";
 #endif
         }
-#ifdef VERBOSE
-        std::cout<<"First iter. check is true.\n";
-#endif
-      }
 
         //normal matrix multiplication for one tile
         for(i=tileRstart; i<tileRend; i++){
@@ -448,7 +448,7 @@ class Matrix
       }
 
 #ifdef VERBOSE
-      std::cout<<"\e[93mUscita dalla funzione MultiplyTilesOnce...\e[39mDistruzione delle variabili locali\n";
+      std::cout<<"\e[93mUscita dalla funzione GetResultTile...\e[39mDistruzione delle variabili locali\n";
 #endif
     }
 
@@ -511,12 +511,6 @@ class Matrix
           msg.str("");
 #endif
         }
-
-        for(int i=0; i<tSize; i++){
-          for(int j=0; j<tSize; j++){
-            matrixpt[tileRstart+i][tileCstart+j] = 0;
-          }
-        }
 #ifdef VERBOSE
         std::cout<<"First iter. check is true.\n";
 #endif
@@ -530,7 +524,6 @@ class Matrix
             //std::cout<<A.matrixpt[i][k]<<"\n";
             //std::cout<<B.matrixpt[8][3]<<"\n";
             matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
-//            matrixpt[i][j] += A.GetElement(i, k)*B.GetElement(k, j);
 #ifdef VERBOSE
             msg << i<<", "<<j<<", "<<k<<"\n"<<"sum is now: "<<matrixpt[i][j]<<"\n";
             std::cout<< msg.str();
