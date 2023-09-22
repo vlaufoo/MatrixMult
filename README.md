@@ -3,6 +3,8 @@
 - [Tiled Multiplication](https://github.com/vlaufoo/MatrixMult#tiled-multiplication)
 - [Program Structure](https://github.com/vlaufoo/MatrixMult#program-structure)
 - [Test Results](https://github.com/vlaufoo/MatrixMult#test-results)
+- [Optimizations](https://github.com/vlaufoo/MatrixMult#optimizations)
+- [Conslusions](https://github.com/vlaufoo/MatrixMult#Conclusions)
 - [Compiling](https://github.com/vlaufoo/MatrixMult#compilation)
 
 # Tiled Multiplication
