@@ -382,88 +382,31 @@ class Matrix
     }
 
 
-
     //tiling of the operands
-    void GetResultTile(Matrix &A, Matrix &B, int iterations, int IdxArow, int IdxBcol, int tSize){
+    void GetResultTile(Matrix &A, Matrix &B, int i, int j, int tR, int tC){
 
-      std::stringstream msg;
-      
-      for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
-        //debugging
-#ifdef VERBOSE
-        std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
-        printf("Sono all'inizio\n");
-#endif
-        if(A.columns != B.rows){
-          std::cout<<"The matrices are incompatible!\n";
-          exit(404);
-        }
-        //all indices are referred to A matrix and transposed for the B matrix
-        int tileCstart = IdxBcol*tSize;
-        int tileCend = (IdxBcol+1)*tSize;
-        int tileRstart = IdxArow*tSize;
-        int tileRend = (IdxArow+1)*tSize;
-        int ThisTileEnd = (IdxAcol+1)*tSize;
-        int ThisTileStart = IdxAcol*tSize;
+      int tileStartR = i*tR;
+      int tileEndR = (i+1)*tR;
+      int tileStartC = j*tC;
+      int tileEndC = (j+1)*tC;
 
-        //adjustment for when A clumns and B rows are not multiple of tSize
-        if(ThisTileEnd>A.columns){
-          ThisTileEnd = A.columns;
-#ifdef VERBOSE
-          std::cout<<"Abnormal tile encountered...................."<<std::endl;
-#endif
-        }
+      if(tileEndR > A.rows)
+        tileEndR = A.rows;
 
-        //IdxAcol is equal to the iteration number so in the tile multiplication
-        //the index of the destination tile is defined with IdxBcol, instead 
-        //the inner most loop uses IdxAcol.
+      if(tileEndC > B.columns)
+        tileEndC = B.columns;
 
-        //setting the padding rows and columns depending on the operands
-
-        if(IdxAcol == 0){
-          //if it's the first iteration set destination matrix to 0)
-          if(IdxArow == 0 && IdxBcol == 0){
-            padded_rows = A.padded_rows;
-            padded_columns = B.padded_columns;
-#ifdef PRINT_NUMBERS
-            std::cout<<"Beginning tiled multiplication: padding rows/columns copied from operands to result.\n";
-            msg << "Padd rows = "<<padded_rows<<" Padd cols = "<<padded_columns<<std::endl;
-            std::cout<<msg.str();
-            msg.str("");
-#endif
-          }
-#ifdef VERBOSE
-          std::cout<<"First iter. check is true.\n";
-#endif
-        }
-
-        //normal matrix multiplication for one tile
-        for(i=tileRstart; i<tileRend; i++){
-          for(j=tileCstart; j<tileCend; j++){
-            for(k=ThisTileStart; k<ThisTileEnd; k++){
-              msg<<i<<", "<<j<<", "<<k<<"\n";
-              std::cout<<msg.str();
-              msg.str("");
-              matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
-            }
+      for(int r=tileStartR; r < tileEndR; r++){
+        for(int c=tileStartC; c < tileEndC; c++){
+          for(int k=0; k<A.columns; k++){
+            matrixpt[r][c] += A.matrixpt[r][k] * B.matrixpt[k][c];
           }
         }
       }
-
-#ifdef VERBOSE
-      std::cout<<"\e[93mUscita dalla funzione GetResultTile...\e[39mDistruzione delle variabili locali\n";
-#endif
     }
 
 
-
-
-
-
-
-
-
-    //tiling of the operands
+    //tiling of the result matrix
 
     void MultiplyTilesOnce(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize){
       std::stringstream msg;
@@ -541,131 +484,6 @@ class Matrix
         }
       }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //tiling of the operands with the tile stored in a given pointer to pointer topointer (iteration > row > col)
-    void MultiplyTiles(Matrix& A, Matrix& B, int IdxAcol, int IdxArow, int IdxBcol, int tSize, int** results){
-
-      //debugging
-#ifdef VERBOSE
-      std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
-#endif
-
-      if(A.columns != B.rows){
-        std::cout<<"The matrices are incompatible!\n";
-        exit(404);
-      }
-      //all indices are referred to A matrix and transposed for the B matrix
-      int tileCstart = IdxBcol*tSize;
-      int tileCend = (IdxBcol+1)*tSize;
-      int tileRstart = IdxArow*tSize;
-      int tileRend = (IdxArow+1)*tSize;
-      int ThisTileEnd = (IdxAcol+1)*tSize;
-      int ThisTileStart = IdxAcol*tSize;
-
-      //adjustment for when A clumns and B rows are not multiple of tSize
-      if(ThisTileEnd>A.columns){
-        ThisTileEnd = A.columns;
-#ifdef VERBOSE
-        std::cout<<"Abnormal tile encountered...................."<<std::endl;
-#endif
-      }
-
-      //IdxAcol is equal to the iteration number so in the tile multiplication
-      //the index of the destination tile is defined with IdxBcol, instead 
-      //the inner most loop uses IdxAcol.
-
-      //setting the padding rows and columns depending on the operands
-      //padded_rows = A.padded_rows;
-      //padded_columns = B.padded_columns;
-
-      //the initialization to zero is left to the moment of allocation of the "results" pointer (before this 
-      //function is called)
-
-      //normal matrix multiplication for one tile
-      for(i=tileRstart; i<tileRend; i++){
-        for(j=tileCstart; j<tileCend; j++){
-          for(k=ThisTileStart; k<ThisTileEnd; k++){
-            results[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
-          }
-        }
-      } 
-      //	   printf("\e[93mUscita dalla funzione MultiplyTiles...\e[39mDistruzione delle variabili locali\n");
-    }
-
-
-
-
-
-
-
-    //tiling of the operands with the tile stored in a given pointer to pointer topointer (iteration > row > col)
-    void WriteResultTile(Matrix& A, Matrix& B, int iterations, int IdxArow, int IdxBcol, int tSize, int** results){
-
-      for(int IdxAcol=0; IdxAcol<iterations; IdxAcol++){
-        //debugging
-#ifdef VERBOSE
-        std::cout<<"\nTile row "<<IdxArow<<" column "<<IdxBcol<<". Iteration "<<IdxAcol<<"\n\n";
-#endif
-
-        if(A.columns != B.rows){
-          std::cout<<"The matrices are incompatible!\n";
-          exit(404);
-        }
-        //all indices are referred to A matrix and transposed for the B matrix
-        int tileCstart = IdxBcol*tSize;
-        int tileCend = (IdxBcol+1)*tSize;
-        int tileRstart = IdxArow*tSize;
-        int tileRend = (IdxArow+1)*tSize;
-        int ThisTileEnd = (IdxAcol+1)*tSize;
-        int ThisTileStart = IdxAcol*tSize;
-
-        //adjustment for when A clumns and B rows are not multiple of tSize
-        if(ThisTileEnd>A.columns){
-          ThisTileEnd = A.columns;
-#ifdef VERBOSE
-          std::cout<<"Abnormal tile encountered...................."<<std::endl;
-#endif
-        }
-
-        //IdxAcol is equal to the iteration number so in the tile multiplication
-        //the index of the destination tile is defined with IdxBcol, instead 
-        //the inner most loop uses IdxAcol.
-
-        //setting the padding rows and columns depending on the operands
-        //padded_rows = A.padded_rows;
-        //padded_columns = B.padded_columns;
-
-        //the initialization to zero is left to the moment of allocation of the "results" pointer (before this 
-        //function is called)
-
-        //normal matrix multiplication for one tile
-        for(i=tileRstart; i<tileRend; i++){
-          for(j=tileCstart; j<tileCend; j++){
-            for(k=ThisTileStart; k<ThisTileEnd; k++){
-              results[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
-            }
-          }
-        } 
-        //	   printf("\e[93mUscita dalla funzione MultiplyTiles...\e[39mDistruzione delle variabili locali\n");
-      }
-    }
-
-
-
-
 
 
 
