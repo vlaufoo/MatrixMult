@@ -1,5 +1,6 @@
 #!/bin/bash
-
+echo -e "R\tC\tT\tSi\ttR\ttC\tOp_FF\tRes_FF\tSt\tPt\tiPt\tSU\tInfo\tSeed:${3}\n" > "$3_$1_$2_$4.txt"
+sleep 2
 for t in 2 4 6 8 10
 do
   for ffo in 1 1.3 1.7 2
