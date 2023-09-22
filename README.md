@@ -20,7 +20,7 @@ for(i=0; i<A_rows; i++){ //row of the result matrix C (equal to row of the opera
 }
 ```
 
-## Parallelizaiton
+## Parallelization
 
 When looking for ways to parallelize this process, to speed up execution, an immediate answer is to have each separate processing unit (or thread) calculate one element of the result matrix. Since they are completely independent of each other no data races should be caused. This approach of course will require a number of threads or processing units that is equal to the number of elements of the result matrix.
 A more flexible approach is to specify the target number of threads, based on the available resources, and devide the process in exactly that number of **independent** operations. A good solution for this would be **tiled multiplication**.
@@ -175,7 +175,8 @@ The 4-threaded operation has lost its advantage and the 6-threaded one, more sui
 ![Square_Parallel_Comparison_double_width.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_Parallel_Comparison_double_width.png?raw=true)
 
 
-Once the matrix becomes a 1:2 rectangle, the 2 thread, 8 thread and 10 thread solutions become more suitable for the operation as thay fit perfectly the shape of the result matrix, but the overhead associated with initializing the threads is too costly to allow the more parallelized versions to outperform the simpler two-threaded operation. Let's try to understand if this overhead is indeed caused by the initialization of the threads, or is linked to another factor. If it was given, at least in part, by the threads, increasing the load of each thread, should in theory counter this problem, by spreading the lost time among more operations (multiply & add).
+Once the matrix becomes a 1:2 rectangle, the 2 thread, 8 thread and 10 thread solutions become more suitable for the operation as they fit perfectly the shape of the result matrix, but the overhead associated with initializing the threads is too costly to allow the more parallelized versions to outperform the simpler two-threaded operation. Let's try to understand if this overhead is indeed caused by the initialization of the threads, or is linked to another factor. If it was given, at least in part, by the threads, increasing the load of each thread, should in theory counter this problem, by spreading the lost time among more operations (multiply & add).
+
 With the same dataset, graphing the average Speedup across all matrix dimensions, against the operands' form factor, yields the following result:
 
 ![Double_width_speedup_change_with_FFO.png](https://github.com/vlaufoo/MatrixMult/blob/master/Double_width_speedup_change_with_FFO.png?raw=true)
@@ -192,7 +193,7 @@ The number of operations (multiply & add) done by one thread in this type of til
 $$Op={FF_{op} \times FF_{res} \times R^3 \over T}+OH={MADD \over T}+OH$$
 Where $FF_{res}$ and $FF_{op}$ are the result matrix and operands form factors respectively, $R$ is the number of rows of the result matrix, and $OH$ is the overhead. Under these conditions, the speedup can be calculated as:
 $$Speedup={MADD \over {MADD \over T}+OH}={T \over 1+{T \times OH \over MADD}}$$
-We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup \to T$
+We can conclude that, to improve the speedup, any increase in the number of *Multiply & Add (**MADD**)* operations is a welcome one, and when $MADD\to\infty$, then $Speedup \to T$.
 If we were to graph the actual curves of the execution time against the matrix size, and the estimations obtained using this simple model, we would get something like this:
 
 ![Time_vs_operand_FF_vs_rows.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows.png?raw=true)
