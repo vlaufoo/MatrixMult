@@ -163,7 +163,7 @@ In the first test the program (which cycles through matrix dimensions in a range
 | Operand Form Factor | 1, 1.3, 1.7, 2 |
 | Result Form Factor | 1, 1.3, 1.7, 2 |
 
-## Graphs
+## Plots
 The following graph shows the execution times of all the multiplications, for square matrices (both result and operands), with all possible degrees of parallelization.
 
 ![Square_Parallel_Comparison.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_Parallel_Comparison.png?raw=true)
@@ -207,7 +207,46 @@ Clearly, the model used in this case has something missing. Something is increas
 ![Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
 The serial operation is instead well modeled, as seen in the above picture.
 
+# Optimizations
+In the provious tests we have employed a very general version of tiled multiplication. We can adapt the concept to make it more efficient in the case of a small number of processing units or threads, like ours, skipping the calculation of the **partial** result tiles (in our case obtained by the `MultiplyTilesOnce` method), and instead create a method that returns the **final** result of a specific tile. This should decrease the time we spend in between functions, and dedicate it to the actual multiplication. Another improvement that comes to mind is to **remove the need for padding**, by stopping the multiplication before it goes out of bounds, simply knowing the number of rows and columns of the intended result. This way we remove two of the most wasteful sections of the original design, and should obtain a visible improvement in **speedup**.
 
+The now method is called `GetResultTile`, and will be called only once by each thread. We call it in the **main** with a slightly different syntax:
+```c++
+    std::vector<std::thread> tiles;
+    clock_t tic_2 = clock();
+    //parallel execution
+    for(i=0; i<Rdiv; i++){
+      for(j=0; j<Cdiv; j++){
+        tiles.emplace_back(&Matrix::GetResultTile, ref(T), ref(A), ref(B), i, j, tR, tC);
+      }
+    }
+
+    for(auto& thread :tiles){
+      thread.join();
+    }
+
+    clock_t toc_2 = clock();
+```
+And the function uses the values o `tR` and `tC`, together with the indices, to set the boundaries of the result tile it's calculating, within the result matrix.
+
+## More plots
+Now that we have implemented this new operation, we will test its performance, with a few more plots.
+In the following figure, we show once again the execution times of two different operations, but now they are the ***"unoptimized"*** parallel version and the ***"optimized"*** version.
+
+
+As is clearly visible by the curves in almost all degrees of parallelization, removing the unnecessary overhead has been baneficial.
+
+Now we can explore once again the question of why the theoetical estimations were sensibly faster than the real operations, in the parallel case. Let us produce the same graph, but this time only using the execution times of the ***"optimized"*** version of the multiplication.
+
+
+The results are still unsatisfactory. The operation still takes more than anticipated, and the reason is till unclear. One more plot could help see what is ahppening, and that is the plot that shows the speedup change across different operand, form factors of the operand, which had previously halped us in showing the advantage of increasing the load on the threads, to compensate for the overhead.
+
+
+From this final figure we can desume that the biggest weight that is lifted by the new optimizations is the wasted operations on the padding elements. The very inefficient **4-threaded** configuration, which was doing 3 times as many useless operations as the useful ones, has jumped up in speed since the removal of padding. The more efficient configurations though, like the **2-threaded** one, have not gained anythuing from the change: the amounts of thread initializations necessary in both approaches is two, and since the optimization, in this case, is limited to that, and no padding needs to be removed, the ***"optimized"*** version is even marginally slower than the original one.
+Looking at the other configuations, we can see that the same reasoning applies the **8-threaded** solution, which again is very suitable for this form factor, whereas the **10-threaded** one, relatively inefficient in the original operation, has definately been improved. 
+
+# Conclusions
+In summation, the tiled multiplication experiment has proven reasonably successful. The algorithm has in many cases improved the speed of the multiplication, but has shown in many others its incompatibility with small arrays of processing units. If the number of **parallel** therads was considerably greater than the one used for this experiment, like for example in the use of **GPUs** for ML applcations, the tiles could be much smaller, and the load of the unnecessary operations on padding elements would be shared across many more units. In our case this approach has proven at times extremely inefficient and has been partially improved by the modifications described in the paragraphs above. The overhead caused by padding elements has been completely removed and approaches that were preaviously unusable have become feasable. In its most efficient form, and in the most favorable conditions, the **original** tiled multiplication algorithm still won over the ***optimized*** one.
 
 
 # Compilation
@@ -231,4 +270,5 @@ Some other make targets are included:
 - `make testing`: a smaller target used for testing purposes
   
 - The [Rewind](https://github.com/vlaufoo/MatrixMult/tree/master/Rewind) folder, which also contains another `Tensor` class, with a few new methods, to extend the usecases of the original program.
+
 
