@@ -204,7 +204,9 @@ $$t_{EX}={R^3\*FF_{op}\*FF_{res}\*t_{MADD} \over 4}$$
 except that in this case the result matrix was always square, so:
 $$t_{EX}={R^3\*FF_{op}\*t_{MADD} \over 4}$$
 The value of $t_{MADD}$ was calculated from the dataset, as the average of $t_{EX} \over {R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***.
-Clearly, the model used in this case has something missing. Something is increasing the execution time for the parallel multiplication by a factor that is certainly dependent on the number of **MADD** operations. What is it?
+Clearly, the model used in this case has something missing. Something is increasing the execution time for the parallel multiplication by a factor that is certainly dependent on the number of **MADD** operations. If we include a new contribution to the execution time, proportional to the number of **MADD** operations, we get $t_{EX}={MADD \left( 1+2.23 \right) \times t_{MADD} \over 4}$, and the corrersponding plot:
+
+![Time_vs_operand_FF_vs_rows_corrected.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_corrected.png?raw=true)
 
 ![Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
 The serial operation is instead well modeled, as seen in the above picture.
@@ -238,16 +240,16 @@ In the following figure, we show once again the execution times of two different
 
 ![Square_optimized_comparison.png](https://github.com/vlaufoo/MatrixMult/blob/master/Square_optimized_comparison.png?raw=true)
 As is clearly visible by the curves in almost all degrees of parallelization, removing the unnecessary overhead has been baneficial.
-Now we can explore once again the question of why the theoetical estimations were sensibly faster than the real operations, in the parallel case. Let us produce the same graph, but this time only using the execution times of the ***"optimized"*** version of the multiplication.
-
-
-![Time_vs_operand_FF_vs_rows_optimized.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_optimized.png?raw=true)
-The results are still unsatisfactory. The operation still takes more than anticipated, and the reason is till unclear. One more plot could help see what is ahppening, and that is the plot that shows the speedup change across different operand, form factors of the operand, which had previously halped us in showing the advantage of increasing the load on the threads, to compensate for the overhead.
-
 
 ![Double_speedup_change_with_FFO_optimized.png](https://github.com/vlaufoo/MatrixMult/blob/master/Double_speedup_change_with_FFO_optimized.png?raw=true)
-From this final figure we can desume that the biggest weight that is lifted by the new optimizations is the wasted operations on the padding elements. The very inefficient **4-threaded** configuration, which was doing 3 times as many useless operations as the useful ones, has jumped up in speed since the removal of padding. The more efficient configurations though, like the **2-threaded** one, have not gained anythuing from the change: the amounts of thread initializations necessary in both approaches is two, and since the optimization, in this case, is limited to that, and no padding needs to be removed, the ***"optimized"*** version is even marginally slower than the original one.
+From this second figure we can desume that the biggest weight that is lifted by the new optimizations is the wasted operations on the padding elements. The very inefficient **4-threaded** configuration, which was doing 3 times as many useless operations as the useful ones, has jumped up in speed since the removal of padding. The more efficient configurations though, like the **2-threaded** one, have not gained anythuing from the change: the amounts of thread initializations necessary in both approaches is two, and since the optimization, in this case, is limited to that, and no padding needs to be removed, the ***"optimized"*** version is even marginally slower than the original one.
 Looking at the other configuations, we can see that the same reasoning applies the **8-threaded** solution, which again is very suitable for this form factor, whereas the **10-threaded** one, relatively inefficient in the original operation, has definately been improved. 
+Now we can explore once again the question of why the theoetical estimations were sensibly faster than the real operations, in the parallel case. Let us produce the same graph, but this time only using the execution times of the ***"optimized"*** version of the multiplication. The model used is the one including the overhead operations, expressed in terms of **MADD**: $$t_{EX}={MADD \left( 1+2.23 \right) \times t_{MADD} \over 4}$$
+
+![Time_vs_operand_FF_vs_rows_optimized_corrected.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_optimized_corrected.png?raw=true)
+The operation still takes more than anticipated. This added time is reflected also in the results we have already commented on, where we have seen that the new method does not in fact surpass the old one, when it is tested in the best possible conditions (like this case).
+
+
 
 # Conclusions
 In summation, the tiled multiplication experiment has proven reasonably successful. The algorithm has in many cases improved the speed of the multiplication, but has shown in many others its incompatibility with small arrays of processing units. If the number of **parallel** therads was considerably greater than the one used for this experiment, like for example in the use of **GPUs**, the tiles could be much smaller, and the load of the unnecessary operations on padding elements would be shared across many more units. In our case this approach has proven at times extremely inefficient and has been partially improved by the modifications described in the paragraphs above. The overhead caused by padding elements has been completely removed and approaches that were preaviously unusable have become feasable. In its most efficient form, and in the most favorable conditions, the ***original*** tiled multiplication algorithm still won over the ***optimized*** one.
