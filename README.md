@@ -203,10 +203,7 @@ In this picture, we have plotted the data extracted from the test program, and c
 $$t_{EX}={R^3\*FF_{op}\*FF_{res}\*t_{MADD} \over 4}$$
 except that in this case the result matrix was always square, so:
 $$t_{EX}={R^3\*FF_{op}\*t_{MADD} \over 4}$$
-The value of $t_{MADD}$ was calculated from the dataset, as the average of $t_{EX} \over {R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***.
-Clearly, the model used in this case has something missing. Something is increasing the execution time for the parallel multiplication by a factor that is certainly dependent on the number of **MADD** operations. If we include a new contribution to the execution time, proportional to the number of **MADD** operations, we get $t_{EX}={MADD \left( 1+2.23 \right) \times t_{MADD} \over 4}$, and the corrersponding plot:
-
-![Time_vs_operand_FF_vs_rows_corrected.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_corrected.png?raw=true)
+The value of $t_{MADD}$ was calculated from the dataset, as the average of $t_{EX} \over {R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***. The comparison with the ideal case clearly underlines the presence of **overhead**, increasing proportionally with $R^3$.
 
 ![Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
 The serial operation is instead well modeled, as seen in the above picture.
@@ -244,9 +241,9 @@ As is clearly visible by the curves in almost all degrees of parallelization, re
 ![Double_speedup_change_with_FFO_optimized.png](https://github.com/vlaufoo/MatrixMult/blob/master/Double_speedup_change_with_FFO_optimized.png?raw=true)
 From this second figure we can desume that the biggest weight that is lifted by the new optimizations is the wasted operations on the padding elements. The very inefficient **4-threaded** configuration, which was doing 3 times as many useless operations as the useful ones, has jumped up in speed since the removal of padding. The more efficient configurations though, like the **2-threaded** one, have not gained anythuing from the change: the amounts of thread initializations necessary in both approaches is two, and since the optimization, in this case, is limited to that, and no padding needs to be removed, the ***"optimized"*** version is even marginally slower than the original one.
 Looking at the other configuations, we can see that the same reasoning applies the **8-threaded** solution, which again is very suitable for this form factor, whereas the **10-threaded** one, relatively inefficient in the original operation, has definately been improved. 
-Now we can explore once again the question of why the theoetical estimations were sensibly faster than the real operations, in the parallel case. Let us produce the same graph, but this time only using the execution times of the ***"optimized"*** version of the multiplication. The model used is the one including the overhead operations, expressed in terms of **MADD**: $$t_{EX}={MADD \left( 1+2.23 \right) \times t_{MADD} \over 4}$$
+Now we can explore once again the question of why the theoetical estimations were sensibly faster than the real operations, in the parallel case. Let us produce the same graph, but this time only using the execution times of the ***"optimized"*** version of the multiplication. The model used is again the ideal one, but the dashed lines are now drawn with data from the ***"optimized"*** test:
 
-![Time_vs_operand_FF_vs_rows_optimized_corrected.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_optimized_corrected.png?raw=true)
+![Time_vs_operand_FF_vs_rows_optimized.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_optimized.png?raw=true)
 The operation still takes more than anticipated. This added time is reflected also in the results we have already commented on, where we have seen that the new method does not in fact surpass the old one, when it is tested in the best possible conditions (like this case).
 
 
