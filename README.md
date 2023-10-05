@@ -200,10 +200,10 @@ If we were to graph the actual curves of the execution time against the matrix s
 
 ![Time_vs_operand_FF_vs_rows.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows.png?raw=true)
 In this picture, we have plotted the data extracted from the test program, and compared it with an estimation, for each operand form factor.
-$$t_{EX}={R^3\*FF_{op}\*FF_{res}\*t_{MADD} \over 4}$$
+$$t_{EX}={R^3 \times FF_{op} \times FF_{res} \times t_{MADD} \over 4}$$
 except that in this case the result matrix was always square, so:
-$$t_{EX}={R^3\*FF_{op}\*t_{MADD} \over 4}$$
-The value of $t_{MADD}$ was calculated from the dataset, as the average of $t_{EX} \over {R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***. The comparison with the ideal case clearly underlines the presence of **overhead**, increasing proportionally with $R^3$.
+$$t_{EX}={R^3 \times FF_{op} \times t_{MADD} \over 4}$$
+The value of $t_{MADD}$ was calculated from the dataset, as the average of ${t_{EX} \over R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***. The comparison with the ideal case clearly underlines the presence of **overhead**, increasing proportionally with $R^3$.
 
 ![Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
 The serial operation is instead well modeled, as seen in the above picture.
