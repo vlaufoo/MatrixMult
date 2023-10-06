@@ -1,3 +1,5 @@
+<div align="justify">
+
 # Index
 
 - [Tiled Multiplication](https://github.com/vlaufoo/MatrixMult#tiled-multiplication)
@@ -274,4 +276,4 @@ Some other make targets are included:
   
 - The [Rewind](https://github.com/vlaufoo/MatrixMult/tree/master/Rewind) folder, which also contains another `Tensor` class, with a few new methods, to extend the usecases of the original program.
 
-
+</div>
