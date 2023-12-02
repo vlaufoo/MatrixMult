@@ -9,6 +9,11 @@
 
 #ifdef CUDA
 #include<cooperative_groups.h>
+#include<assert.h>
+#include<cuda_runtime.h>
+#include<cuda_prfiler_api.h>
+#include<helper_functions.h>
+#include<helper_cuda.h>
 #endif
 
 #define TYPE int
@@ -222,42 +227,17 @@ public:
 
   }
 
-  //TILING FUNCTIONS
-  /*
-    //tiling of the result matrix
-    void CalculateTile(Matrix A, Matrix B, int tSize, int tRow, int tCol){
-      //this does the product of one tSizextSize tile, at position (tRow, tCol)
-      //int the A matrix, and puts the result in the calling matrix, which has 
-      //the destinetion tile inizialied at zero before the calculation;
-      //the case in which the tiling is not perfect (not all tiles are square) is 
-      //accounted for with the STD::min functions below
-
-      int start_row = tRow * tSize;
-      int start_column = tCol * tSize;
-      int end_row = std::min(start_row + tSize, A.rows);
-      int end_column = std::min(start_column + tSize, B.columns);
-
-      for(i=start_row; i<end_row; i++){
-        for(j=start_column; j<end_column; j++){
-          matrixpt[i][j] = 0;
-        }
-      }
-
-      for(i=start_row; i<end_row; i++){
-        for(j=start_column; j<end_column; j++){
-          for(k=0; k<A.columns; k++){
-            matrixpt[i][j] += A.matrixpt[i][k]*B.matrixpt[k][j];
-          }
-#ifdef VERBOSE
-          std::cout<<"Element ("<<i<<","<<j<<") = "<<matrixpt[i][j]<<"\n";
-#endif
-        }
+  void BlurtMatrix(T* values){
+    for(i=0; i<rows; i++){
+      for(j=0; j<columns; j++){
+        values[i*columns + j] = matrixpt[i][j];
       }
     }
-*/
+  }
 
-  Matrix ForceAddTilingPaddingRows(int tSize, int tile_rows){
-    int padding_rows = tSize*tile_rows - rows;
+  Matrix ForceAddTilingPaddingRows(int tSize){
+
+    int padding_rows = (rows%tSize == 0) ? tSize : (tSize-rows%tSize);
 
     Matrix temp(rows+padding_rows, columns);
     Matrix result = *this || temp;
@@ -268,8 +248,9 @@ public:
     return result;
   }
 
-  Matrix ForceAddTilingPaddingColumns(int tSize, int tile_columns){
-    int padding_columns = tSize*tile_columns - columns;
+  Matrix ForceAddTilingPaddingColumns(int tSize){
+
+    int padding_columns = (columns%tSize == 0) ? tSize : (tSize-columns%tSize);
 
     Matrix temp(rows, columns+padding_columns);
     Matrix result = *this || temp;
@@ -277,10 +258,10 @@ public:
     return result;
   }
 
-  Matrix ForceAddTilingPadding(int tSize, int tile_rows, int tile_columns){
+  Matrix ForceAddTilingPadding(int tSize){
 
-    int padding_rows = tSize*tile_rows-rows;
-    int padding_columns = tSize*tile_columns-columns;
+    int padding_rows = (rows%tSize == 0) ? tSize : (tSize-rows%tSize);
+    int padding_columns = (columns%tSize == 0) ? tSize : (tSize-columns%tSize);
 
     Matrix temp(rows+padding_rows, columns+padding_columns);
     Matrix result = *this || temp;
@@ -676,9 +657,10 @@ public:
 
 void SingleTileThread(int threadId, Matrix<TYPE>& Destination, Matrix<TYPE>& A, Matrix<TYPE>& B, int iterations, int i, int j, int tSize);
 
+int BestSquareTiling(Matrix<TYPE>& A, Matrix<TYPE>& B, int form_factor_result, int threads, int& big_div, int& small_div);
 
+double UnopTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int tSize, int& ThNumber);
 
-double UnopTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int form_factor_result, int threads, int& tileSize, int& ThNumber);
-double OpTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int form_factor_result, int threads, int& tRows, int& tCols);
+double OpTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int &big_div, int& small_div);
 
 

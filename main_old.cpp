@@ -90,17 +90,19 @@ int main(int argc, char **argv){
 //    cout<<"Serial execution in "<<(double)(toc_1 - tic_1)/CLOCKS_PER_SEC<<" seconds.\n\n";
 #endif
 
-    int tR;
-    int tC;
-    int tSize;
-    int ThN;
+    int big_divider, small_divider, ThN;
+
+    int tSize = BestSquareTiling(A, B, form_factor_result, threads, big_divider, small_divider);
 
     double serial_time = (double)(toc_1 - tic_1)/CLOCKS_PER_SEC;
-    double optimized_time = OpTile(A, B, T, form_factor_result, threads, tR, tC);
-    double unoptimized_time = UnopTile(A, B, Y, form_factor_result, threads, tSize, ThN);
+    double optimized_time = OpTile(A, B, T, big_divider, small_divider);
+    double unoptimized_time = UnopTile(A, B, Y, tSize, ThN);
 
     speedup[p] = (serial_time/min(optimized_time, unoptimized_time));
 
+#ifdef CUDA
+    speedup[p] = (serial_time/min(optimized_time, unoptimized_time, cuda_time));
+#endif
 
     if(p == max){
 
@@ -110,8 +112,6 @@ int main(int argc, char **argv){
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
               tSize,
-              tR,
-              tC,
               form_factor_operands,
               form_factor_result,
               serial_time,

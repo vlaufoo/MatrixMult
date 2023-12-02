@@ -24,8 +24,8 @@
 
 disable=0
 
-main_CUDA: main_old.cpp Functions.hpp UnopTile.cpp OpTile.cpp makefile
-	g++ Functions.hpp main_old.cpp OpTile.cpp UnopTile.cpp SingleTileThread.cpp -o main_CUDA -D PRINT_NUMBERS -D VERBOSE 
+main_CUDA: main_old.cpp Functions.hpp UnopTile.cpp OpTile.cpp BestSquareTiling.cpp makefile
+	g++ Functions.hpp main_old.cpp OpTile.cpp UnopTile.cpp SingleTileThread.cpp BestSquareTiling.cpp -o main_CUDA -D PRINT_NUMBERS -D VERBOSE 
 
 main_new: main_new.cpp Tensor.hpp makefile
 	g++ main_new.cpp Tensor.hpp -o main_new -Wall
