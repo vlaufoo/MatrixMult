@@ -1,6 +1,7 @@
 #include "Functions.hpp"
 
-int BestSquareTiling(Matrix<TYPE>& A, Matrix<TYPE>& B, int form_factor_result, int threads, int& big_div, int &small_div)
+template <typename T = int>
+int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int threads, int& big_div, int &small_div)
 {
   using namespace std;
   //PREP FOR TILING OF THE MATRICES

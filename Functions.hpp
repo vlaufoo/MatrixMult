@@ -7,18 +7,31 @@
 #include<vector>
 #include<type_traits>
 
-#ifdef CUDA
-#include<cooperative_groups.h>
-#include<assert.h>
-#include<cuda_runtime.h>
-#include<cuda_prfiler_api.h>
-#include<helper_functions.h>
-#include<helper_cuda.h>
+#ifndef TYPE
+#define TYPE int
 #endif
 
-#define TYPE int
+#ifdef CUDA
+#include<assert.h>
+#include<cuda_runtime.h>
+#include<cuda_profiler_api.h>
+//#include<helper_functions.h>
+//#include<helper_cuda.h>
 
-template <typename T = int> class Matrix {
+template <typename T = int>
+struct mat {
+  int width; 
+  int height;
+  int padd_width;
+  int padd_height;
+  T* elements;
+};
+
+#endif
+
+
+template <typename T = int>
+class Matrix {
 private:
   int rows;
   int columns;
@@ -652,15 +665,22 @@ public:
 
 };
 
+#ifdef CUDA
+#include "CudaFunctions.cu"
+#endif
 
 //OTHER FUNCTIONS
 
-void SingleTileThread(int threadId, Matrix<TYPE>& Destination, Matrix<TYPE>& A, Matrix<TYPE>& B, int iterations, int i, int j, int tSize);
+template <typename T = int>
+void SingleTileThread(int threadId, Matrix<T>& Destination, Matrix<T>& A, Matrix<T>& B, int iterations, int i, int j, int tSize);
 
-int BestSquareTiling(Matrix<TYPE>& A, Matrix<TYPE>& B, int form_factor_result, int threads, int& big_div, int& small_div);
+template <typename T = int>
+int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int threads, int& big_div, int& small_div);
 
-double UnopTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int tSize, int& ThNumber);
+template <typename T = int>
+double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumber);
 
-double OpTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int &big_div, int& small_div);
+template <typename T = int>
+double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int &big_div, int& small_div);
 
 

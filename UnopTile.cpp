@@ -1,6 +1,7 @@
 #include "Functions.hpp"
 
-double UnopTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int tSize, int& ThNumber)
+template <typename T = int>
+double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumber)
 {
   using namespace std;
   Matrix<TYPE> PA = A.ForceAddTilingPaddingRows(tSize);

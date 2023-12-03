@@ -1,6 +1,7 @@
 #include "Functions.hpp"
 
-double OpTile(Matrix<TYPE> &A, Matrix<TYPE> &B, Matrix<TYPE> &C, int& div_1, int& div_2)
+template <typename T = int>
+double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int& div_1, int& div_2)
 {
   using namespace std;
   //PREP FOR THE DISUNIFORM TILING OF THE OPTIMIZED METHOD
