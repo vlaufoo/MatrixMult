@@ -1,4 +1,3 @@
-
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 16
 #endif
@@ -45,6 +44,7 @@ __global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat
 
   C.elements[(by * BLOCK_SIZE + ty) * C.width + bx * BLOCK_SIZE + tx] = Cvalue;
 }
+
 
 template <typename T = int>
 double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)

@@ -6,6 +6,8 @@
 #include<cstdio>
 #include<vector>
 #include<type_traits>
+#include<cmath>
+#include<string>
 
 #ifndef TYPE
 #define TYPE int
@@ -638,8 +640,8 @@ public:
 
   bool operator==(Matrix second){
 
-    for(int i=0; i<min(rows, second.rows); i++){
-      for(int j=0; j<min(columns, second.columns); j++){
+    for(int i=0; i<std::min(rows, second.rows); i++){
+      for(int j=0; j<std::min(columns, second.columns); j++){
         if(matrixpt[i][j] != second.matrixpt[i][j])
           return false;
       }

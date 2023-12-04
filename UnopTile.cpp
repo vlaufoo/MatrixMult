@@ -1,6 +1,6 @@
 #include "Functions.hpp"
 
-template <typename T = int>
+template <typename T>
 double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumber)
 {
   using namespace std;
@@ -13,7 +13,7 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
 #endif
 
   //calculating iteration number and prepping threads
-  std::vector<std::thread> kernels;
+  vector<thread> kernels;
   int ThN = 0;
   int iterations = PA.Columns()/tSize;
   if(PA.Columns() % tSize != 0)
@@ -33,17 +33,17 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
 #endif
 
   //GENERALIZED PARALLEL OPERATION
-  
+
   clock_t tic = clock();
 
   for(int i=0; i<PA.Rows()/tSize; i++){
     for(int j=0; j<PB.Columns()/tSize; j++){
-      kernels.emplace_back(SingleTileThread, ThN, std::ref(PC), std::ref(PA), std::ref(PB), iterations, i, j, tSize);
+      kernels.emplace_back(SingleTileThread<TYPE>, ThN, ref(PC), ref(PA), ref(PB), iterations, i, j, tSize);
       ThN++;
     }
   }
 
-  for(auto& thread :kernels){
+  for(auto& thread : kernels){
     thread.join();
   }
 

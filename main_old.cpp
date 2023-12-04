@@ -1,12 +1,4 @@
-#include<iostream>
-#include<cstdio>
 #include"Functions.hpp"
-#include<thread>
-#include<vector>
-#include<mutex>
-#include<ctime>
-#include<cmath>
-#include<string>
 
 //#define TYPE int
 
@@ -37,7 +29,6 @@ int main(int argc, char **argv){
   double speedup[max + 1];
   double best_result = 0;
   int column_factor = step*form_factor_result;
-  int i, j;
 
   cout<<"Rows\tColumns\tthreads\tTile\tOperandsFF\tResultFF\tSerial\tParallel\t\tSpeedup\n";
 
@@ -107,7 +98,7 @@ int main(int argc, char **argv){
     if(p == max){
 
     }else{
-      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t", 
+      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless

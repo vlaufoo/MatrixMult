@@ -1,6 +1,6 @@
 #include "Functions.hpp"
 
-template <typename T = int>
+template <typename T>
 double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int& div_1, int& div_2)
 {
   using namespace std;
