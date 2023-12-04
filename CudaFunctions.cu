@@ -14,10 +14,11 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
 
   C.elements[row * C.width + column] = Cvalue;
 }
-//__global__ void TiledCudaMultKernel();
+
+__global__ void TiledCudaMultKernel(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C);
 
 template <typename T = int>
-double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int bSize) 
+double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
 //bSize deve essere potenza di due, o meglio è preferibile che lo sia
 {
   using namespace std;
@@ -93,7 +94,11 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int bSize)
 
   dim3 dimBlock(bSize, bSize);
   dim3 dimGrid(h_B.width / dimBlock.x, h_A.height / dimBlock.y);
-  CudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
+  if(tiled_mode){
+    CudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
+  }else{
+    TiledCudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C)
+  }
 
   checkCudaErrors(cudaMemcpy(h_C.elements, d_C.elements, Csize, cudaMemcpyDeviceToHost));
 

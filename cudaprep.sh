@@ -5,8 +5,8 @@ for file in *.cpp; do
     # Check if the file exists
     if [ -e "$file" ]; then
         # Copy the file and change the extension to .cu
-        cp "$file" "${file%.cpp}.cu"
-        echo "Copied $file to ${file%.cpp}.cu"
+        cp "$file" "${file}.cu"
+        echo "Copied $file to ${file}.cu"
     fi
 done
 
@@ -15,7 +15,7 @@ for file in *.c; do
     # Check if the file exists
     if [ -e "$file" ]; then
         # Copy the file and change the extension to .cu
-        cp "$file" "${file%.c}.cu"
-        echo "Copied $file to ${file%.c}.cu"
+        cp "$file" "${file}.cu"
+        echo "Copied $file to ${file}.cu"
     fi
 done

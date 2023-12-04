@@ -30,8 +30,10 @@ main_CUDA: main_old.cpp Functions.hpp UnopTile.cpp OpTile.cpp BestSquareTiling.c
 main_new: main_new.cpp Tensor.hpp makefile
 	g++ main_new.cpp Tensor.hpp -o main_new -Wall
 
-testing: testing.cu Functions.hpp CudaFunctions.cu makefile
-	nvcc testing.cu -I./Common -D PRINT_NUMBERS -D CUDA -D VERBOSE -o testing 
+testing: testing.cpp Functions.hpp CudaFunctions.cu makefile
+	./cudaprep.sh
+	nvcc testing.cpp.cu -I./Common -D PRINT_NUMBERS -D CUDA -D VERBOSE -o testing 
+	rm *.cpp.cu
 
 main_old: main_old.o
 	g++ main_old.o -o main_old
@@ -48,7 +50,7 @@ main_old.o: main_old.cpp Classes.h makefile
 
 .PHONY: clean
 clean:
-	rm *.o main_old main_new main_debug
+	rm *.o main_old main_new main_debug testing
 
 .PHONY: tar
 tar:

@@ -636,6 +636,18 @@ public:
     return result;
   }
 
+  bool operator==(Matrix second){
+
+    for(int i=0; i<min(rows, second.rows); i++){
+      for(int j=0; j<min(columns, second.columns); j++){
+        if(matrixpt[i][j] != second.matrixpt[i][j])
+          return false;
+      }
+    }
+
+    return true;
+  }
+
 
 
   //DESTRUCTOR
