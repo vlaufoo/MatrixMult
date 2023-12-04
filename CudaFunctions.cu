@@ -1,4 +1,8 @@
 
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 16
+#endif
+
 template <typename T = int>
 __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
 {
@@ -15,17 +19,42 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
   C.elements[row * C.width + column] = Cvalue;
 }
 
-__global__ void TiledCudaMultKernel(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C);
+template <typename T = int>
+__global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
+{
+  T Cvalue = 0;
+  int bx = blockIdx.x;  int by = blockIdx.y;
+  int tx = threadIdx.x; int ty = threadIdx.y;
+
+  for(int thisTileStart=0; thisTileStart < A.width; thisTileStart+=BLOCK_SIZE){
+    
+    __shared__ T Atile[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ T Btile[BLOCK_SIZE][BLOCK_SIZE];
+
+    Btile[ty][tx] = B.elements[(thisTileStart + ty) * B.width + bx * BLOCK_SIZE + tx];
+    Atile[ty][tx] = A.elements[(by * BLOCK_SIZE + ty) * A.width + (thisTileStart * BLOCK_SIZE) + tx];
+
+    __syncthreads();
+
+    for(int k=0; k < BLOCK_SIZE; k++){
+      Cvalue += Atile[ty][k] * Btile[k][tx];
+    }
+
+    __syncthreads();
+  }
+
+  C.elements[(by * BLOCK_SIZE + ty) * C.width + bx * BLOCK_SIZE + tx] = Cvalue;
+}
 
 template <typename T = int>
 double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
-//bSize deve essere potenza di due, o meglio è preferibile che lo sia
+//BLOCK_SIZE deve essere potenza di due, o meglio è preferibile che lo sia
 {
   using namespace std;
 
-  Matrix<T> CA = A.ForceAddTilingPaddingRows(bSize);
-  Matrix<T> CB = B.ForceAddTilingPaddingColumns(bSize);
-  Matrix<T> CC = C.ForceAddTilingPadding(bSize);
+  Matrix<T> CA = A.ForceAddTilingPaddingRows(BLOCK_SIZE);
+  Matrix<T> CB = B.ForceAddTilingPaddingColumns(BLOCK_SIZE);
+  Matrix<T> CC = C.ForceAddTilingPadding(BLOCK_SIZE);
   struct mat<T> h_A, h_B, h_C;
 
   //h for host
@@ -92,12 +121,18 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
   checkCudaErrors(cudaMemcpy(d_B.elements, h_B.elements, Bsize, cudaMemcpyHostToDevice));
   //C will be populated when it's calculated
 
-  dim3 dimBlock(bSize, bSize);
+  dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
   dim3 dimGrid(h_B.width / dimBlock.x, h_A.height / dimBlock.y);
+
+#ifdef VERBOSE
+  cout<<"The thread block dimensions are: "<<dimBlock.y<<"x"<<dimBlock.x<<"\n";
+  cout<<"The block grid dimensions are: "<<dimGrid.y<<"x"<<dimGrid.x<<"\n";
+#endif
+
   if(tiled_mode){
     CudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
   }else{
-    TiledCudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C)
+    TiledCudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
   }
 
   checkCudaErrors(cudaMemcpy(h_C.elements, d_C.elements, Csize, cudaMemcpyDeviceToHost));
