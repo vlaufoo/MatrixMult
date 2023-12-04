@@ -71,9 +71,9 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
   h_C.padd_height = CC.PaddingRows();
   h_C.padd_width = CC.PaddingColumns();
 
-  size_t Asize = h_A.height * h_A.width * sizeof(TYPE);
-  size_t Bsize = h_B.height * h_B.width * sizeof(TYPE);
-  size_t Csize = h_C.height * h_C.width * sizeof(TYPE);
+  size_t Asize = h_A.height * h_A.width * sizeof(T);
+  size_t Bsize = h_B.height * h_B.width * sizeof(T);
+  size_t Csize = h_C.height * h_C.width * sizeof(T);
 
 
   checkCudaErrors(cudaMallocHost(&h_A.elements, Asize));

@@ -1,5 +1,5 @@
 #!/bin/bash
-echo -e "R\tC\tT\tSi\tOp_FF\tRes_FF\tSt\tPt\tiPt\tSU\tInfo\tSeed:${3}\n" > "$3_$1_$2_$4.txt"
+echo -e "R\tC\tT\tSi\tOp_FF\tRes_FF\tSt\tPt\tiPt\tSU\tCuda\tCuTile\tSeed:${3}\n" > "$3_$1_$2_$4.txt"
 sleep 2
 for t in 2 4 6 8 10
 do

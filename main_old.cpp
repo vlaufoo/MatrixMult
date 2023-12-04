@@ -1,6 +1,5 @@
 #include"Functions.hpp"
 
-//#define TYPE int
 
 
 int main(int argc, char **argv){
@@ -51,14 +50,14 @@ int main(int argc, char **argv){
       fprintf(fp, "\n");
 
     //INITIALIZE MATRIX:
-    Matrix<TYPE> A((start_step+p)*step, (start_step+p)*step*form_factor_operands);
-    Matrix<TYPE> B((start_step+p)*step*form_factor_operands, (start_step+p)*column_factor);
+    Matrix A((start_step+p)*step, (start_step+p)*step*form_factor_operands);
+    Matrix B((start_step+p)*step*form_factor_operands, (start_step+p)*column_factor);
     A.RandomMatrix(50, 400, seed);
     B.RandomMatrix(50, 400, seed);
-    Matrix<TYPE> X((start_step+p)*step, (start_step+p)*column_factor);
-    Matrix<TYPE> Y((start_step+p)*step, (start_step+p)*column_factor);
+    Matrix X((start_step+p)*step, (start_step+p)*column_factor);
+    Matrix Y((start_step+p)*step, (start_step+p)*column_factor);
     //testing if the loop function is slowing down the operation
-    Matrix<TYPE> T = X;
+    Matrix T = X;
 
 #if defined(PRINT_NUMBERS)
     cout<<"Matrices A and B: \n\n";
@@ -86,18 +85,52 @@ int main(int argc, char **argv){
     int tSize = BestSquareTiling(A, B, form_factor_result, threads, big_divider, small_divider);
 
     double serial_time = (double)(toc_1 - tic_1)/CLOCKS_PER_SEC;
+
     double optimized_time = OpTile(A, B, T, big_divider, small_divider);
-    double unoptimized_time = UnopTile(A, B, Y, tSize, ThN);
+#ifdef CHECK_RESULT
+    if(!(X == T)){
+      cout<<"\n\nUnoptimized tiled op. has failed!\n\n";
+      return 1;
+    }
+#endif
+
+    double unoptimized_time = UnopTile(A, B, T, tSize, ThN);
+#ifdef CHECK_RESULT
+    if(!(X == T)){
+      cout<<"\n\nOptimized tiled op. has failed!\n\n";
+      return 2;
+    }
+#endif
 
     speedup[p] = (serial_time/min(optimized_time, unoptimized_time));
 
+//NOW THE SECTION THAT USES CUDA
 #ifdef CUDA
-    speedup[p] = (serial_time/min(optimized_time, unoptimized_time, cuda_time));
+
+    double cuda_normal_time = CudaMult(A, B, T, 0);
+#ifdef CHECK_RESULT
+    if(!(X == T)){
+      cout<<"\n\nNormal cuda op. has failed!\n\n";
+      return 3;
+    }
+#endif
+
+    double cuda_tiled_time = CudaMult(A, B, T, 1);
+#ifdef CHECK_RESULT
+    if(!(X == T)){
+      cout<<"\n\nTiled cuda op. has failed!\n\n";
+      return 4;
+    }
+#endif
+
+
 #endif
 
     if(p == max){
 
     }else{
+
+#ifndef CUDA
       fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t", 
               X.Rows(),
               X.Columns(),
@@ -125,17 +158,43 @@ int main(int argc, char **argv){
         << speedup[p] << "\t";
 
       //segnare miglior risultato per curiosità
-      if(best_result < speedup[p]){
-        best_result = speedup[p];
-        best_dimensions = p;
-        //A.PrintMatrix();
-        //B.PrintMatrix();
-        cout<<"Best result yet!\n";
-        fprintf(fp, "Best result yet!\n");
-      }else{
-        cout<<endl;
-        fprintf(fp, "\n");
-      }
+      cout<<endl;
+      fprintf(fp, "\n");
+#endif
+
+#ifdef CUDA
+      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t", 
+              X.Rows(),
+              X.Columns(),
+              ThN, //ThN, previously confirmed the length of the thread vector, now useless
+              tSize,
+              form_factor_operands,
+              form_factor_result,
+              serial_time,
+              unoptimized_time,
+              optimized_time,
+              speedup[p],
+              cuda_normal_time,
+              cuda_tiled_time
+             );
+
+      std::cout 
+        << X.Rows() << "\t"
+        << X.Columns() << "\t"
+        << ThN << "\t"
+        << tSize << "\t"
+        << form_factor_operands << "\t"
+        << form_factor_result << "\t"
+        << std::fixed 
+        << serial_time
+        << unoptimized_time
+        << optimized_time
+        << speedup[p] << "\t";
+
+      //segnare miglior risultato per curiosità
+      cout<<endl;
+#endif
+
     }
 
     fclose(fp);
