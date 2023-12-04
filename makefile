@@ -1,12 +1,17 @@
 enable := 1
 
+DEFINES := -D BLOCK_SIZE=16
 
 ifeq ($(numbers), $(enable))
-	DEFINES := -D PRINT_NUMBERS
+	DEFINES += -D PRINT_NUMBERS
 endif
 
 ifeq ($(debug), $(enable))
 	DEFINES += -D VERBOSE
+endif
+
+ifeq ($(check), $(enable))
+	DEFINES += -D CHECK_RESULT
 endif
 
 
