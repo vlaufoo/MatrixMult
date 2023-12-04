@@ -31,7 +31,7 @@ main_new: main_new.cpp Tensor.hpp makefile
 	g++ main_new.cpp Tensor.hpp -o main_new -Wall
 
 testing: testing.cu Functions.hpp CudaFunctions.cu makefile
-	nvcc testing.cu -D PRINT_NUMBERS -D CUDA -D VERBOSE -o testing 
+	nvcc testing.cu -I./Common -D PRINT_NUMBERS -D CUDA -D VERBOSE -o testing 
 
 main_old: main_old.o
 	g++ main_old.o -o main_old

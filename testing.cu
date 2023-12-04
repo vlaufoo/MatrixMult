@@ -9,9 +9,8 @@ int main(int argc, char** argv){
 
   A.RandomMatrix(0, 60, 94234852);
   B.RandomMatrix(0, 60, 12334564);
-  C.RandomMatrix(0, 60, 12424235);
 
-  CudaMult(A, B, C, 16);
+  CudaMult(A, B, C, 8);
   Matrix R = A*B;
   R.PrintMatrix();
   C.PrintMatrix();

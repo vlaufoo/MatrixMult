@@ -6,6 +6,8 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
   int row = blockIdx.y * blockDim.y + threadIdx.x;
   int column = blockIdx.x * blockDim.x + threadIdx.y;
 
+  //__syncthreads();
+
   for(int i=0; i<A.width; i++){
     Cvalue += A.elements[row * A.width + i] * B.elements[i * B.width + column];
   }
@@ -39,27 +41,28 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int bSize)
   h_C.padd_height = CC.PaddingRows();
   h_C.padd_width = CC.PaddingColumns();
 
-  h_A.elements = new T[CA.Rows()*CA.Columns()];
-  h_B.elements = new T[CB.Rows()*CB.Columns()];
-  h_C.elements = new T[CC.Rows()*CC.Columns()];
+  size_t Asize = h_A.height * h_A.width * sizeof(TYPE);
+  size_t Bsize = h_B.height * h_B.width * sizeof(TYPE);
+  size_t Csize = h_C.height * h_C.width * sizeof(TYPE);
+
+
+  checkCudaErrors(cudaMallocHost(&h_A.elements, Asize));
+  checkCudaErrors(cudaMallocHost(&h_B.elements, Bsize));
+  checkCudaErrors(cudaMallocHost(&h_C.elements, Csize));
 
   CA.BlurtMatrix(h_A.elements);
   CB.BlurtMatrix(h_B.elements);
-  CC.BlurtMatrix(h_C.elements);
 
   for(int i=0; i<CA.Rows()*CA.Columns(); i++){
     cout<<CA.GetElement(i/CA.Columns(), i%CA.Columns())
         << "-vs-"
-      <<h_A.elements[i]
-      <<"\t";
+        <<h_A.elements[i]
+        <<"\t";
   }
 
   clock_t tic = clock();
 
 
-  size_t Asize = h_A.height * h_A.width * sizeof(TYPE);
-  size_t Bsize = h_B.height * h_B.width * sizeof(TYPE);
-  size_t Csize = h_C.height * h_C.width * sizeof(TYPE);
 
   //now to allocate GPU memory
   struct mat<T> d_A;
@@ -67,36 +70,45 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int bSize)
   d_A.height = h_A.height;
   d_A.padd_height = h_A.padd_height;
   d_A.padd_width = h_A.padd_width;
-  cudaMalloc(&d_A.elements, Asize);
+  checkCudaErrors(cudaMalloc(&d_A.elements, Asize));
 
   struct mat<T> d_B;
   d_B.width = h_B.width;
   d_B.height = h_A.height;
   d_B.padd_height = h_B.padd_height;
   d_B.padd_width = h_B.padd_width;
-  cudaMalloc(&d_B.elements, Bsize);
+  checkCudaErrors(cudaMalloc(&d_B.elements, Bsize));
 
   struct mat<T> d_C;
   d_C.width = h_C.width;
   d_C.height = h_A.height;
   d_C.padd_height = h_C.padd_height;
   d_C.padd_width = h_C.padd_width;
-  cudaMalloc(&d_C.elements, Csize);
+  checkCudaErrors(cudaMalloc(&d_C.elements, Csize));
 
   //now to populate the memory
-  cudaMemcpy(d_A.elements, h_A.elements, Asize, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_B.elements, h_B.elements, Bsize, cudaMemcpyHostToDevice);
+  checkCudaErrors(cudaMemcpy(d_A.elements, h_A.elements, Asize, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_B.elements, h_B.elements, Bsize, cudaMemcpyHostToDevice));
   //C will be populated when it's calculated
 
   dim3 dimBlock(bSize, bSize);
-  dim3 dimGrid(B.Columns() / dimBlock.x, A.Rows() / dimBlock.y);
+  dim3 dimGrid(h_B.width / dimBlock.x, h_A.height / dimBlock.y);
   CudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
 
-  cudaMemcpy(h_C.elements, d_C.elements, Csize, cudaMemcpyDeviceToHost);
+  checkCudaErrors(cudaMemcpy(h_C.elements, d_C.elements, Csize, cudaMemcpyDeviceToHost));
 
   clock_t toc = clock();
 
+  for(int i=0; i<h_C.height; i++){
+    for(int j=0; j<h_C.width; j++){
+      cout<<h_C.elements[i*h_C.width + j];
+      cout<<"\t";
+    }
+    cout<<"\n";
+  }
+
   CC.InitMatrix(h_C.elements, h_C.height * h_C.width);
+  C = CC.RemovePadding();
 
   double execution_time = (double)(toc-tic)/CLOCKS_PER_SEC;
 
@@ -104,9 +116,10 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int bSize)
   cudaFree(d_B.elements);
   cudaFree(d_C.elements);
 
-  delete h_A.elements;
-  delete h_B.elements;
-  delete h_C.elements;
+  checkCudaErrors(cudaFreeHost(h_A.elements));
+  checkCudaErrors(cudaFreeHost(h_B.elements));
+  checkCudaErrors(cudaFreeHost(h_C.elements));
 
   return execution_time;
-}//double TiledCudaMult();
+}
+

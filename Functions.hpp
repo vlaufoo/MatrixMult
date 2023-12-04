@@ -15,8 +15,8 @@
 #include<assert.h>
 #include<cuda_runtime.h>
 #include<cuda_profiler_api.h>
-//#include<helper_functions.h>
-//#include<helper_cuda.h>
+#include<helper_functions.h>
+#include<helper_cuda.h>
 
 template <typename T = int>
 struct mat {
