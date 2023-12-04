@@ -10,7 +10,7 @@ ifeq ($(debug), $(enable))
 endif
 
 
-main_CUDA: main_old.cpp Functions.hpp makefile
+main_CUDA: main_old.cpp CudaFunctions.cu Functions.hpp makefile 
 	@./cudaprep.sh
 	nvcc main_old.cpp.cu -I./Common -o main_CUDA $(DEFINES) -D CUDA
 	@rm *.cpp.cu
@@ -22,11 +22,8 @@ testing: testing.cpp Functions.hpp CudaFunctions.cu makefile
 	@rm *.cpp.cu
 	@echo removed .cpp.cu files
 
-main_debug: main_old.cpp Classes.h makefile
-	g++ main_old.cpp Classes.h -o main_debug $(DEFINES) -Wall  
-
 main_old: main_old.cpp Functions.hpp makefile
-	g++-12 main_old.cpp -o main_old -Wall 
+	g++-12 main_old.cpp -o main_old $(DEFINES) -Wall
 
 .PHONY: clean
 clean:

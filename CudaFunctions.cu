@@ -83,13 +83,6 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
   CA.BlurtMatrix(h_A.elements);
   CB.BlurtMatrix(h_B.elements);
 
-  for(int i=0; i<CA.Rows()*CA.Columns(); i++){
-    cout<<CA.GetElement(i/CA.Columns(), i%CA.Columns())
-        << "-vs-"
-        <<h_A.elements[i]
-        <<"\t";
-  }
-
   clock_t tic = clock();
 
 
@@ -139,14 +132,6 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
 
   clock_t toc = clock();
 
-  for(int i=0; i<h_C.height; i++){
-    for(int j=0; j<h_C.width; j++){
-      cout<<h_C.elements[i*h_C.width + j];
-      cout<<"\t";
-    }
-    cout<<"\n";
-  }
-
   CC.InitMatrix(h_C.elements, h_C.height * h_C.width);
   C = CC.RemovePadding();
 
@@ -159,6 +144,15 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
   checkCudaErrors(cudaFreeHost(h_A.elements));
   checkCudaErrors(cudaFreeHost(h_B.elements));
   checkCudaErrors(cudaFreeHost(h_C.elements));
+
+#ifdef PRINT_NUMBERS
+  if(tiled_mode){
+    cout<<"result of tiled cuda multiplication:\n\n";
+  }else{
+    cout<<"result of normal cuda multiplication:\n\n";
+  }
+  C.PrintMatrix();
+#endif
 
   return execution_time;
 }

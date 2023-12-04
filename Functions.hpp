@@ -453,7 +453,8 @@ public:
 
 
     if(IdxAcol == 0){
-      //if it's the first iteration set destination matrix to 0)
+      //if it's the first iteration set destination matrix to 0) this has been removed and handed to the ZeroMatrix function (dangerous)
+      //now this condition is only here so that we have no data races on padded_rows and padded_columns
       if(IdxArow == 0 && IdxBcol == 0){
         padded_rows = A.padded_rows;
         padded_columns = B.padded_columns;
@@ -745,6 +746,8 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
   Matrix<T> PB = B.ForceAddTilingPaddingColumns(tSize);
   Matrix<T> PC = C.ForceAddTilingPadding(tSize);
 
+  PC.ZeroMatrix();
+
 #ifdef VERBOSE
   cout<<"tSize = "<<tSize<<"\n\n";
 #endif
@@ -760,7 +763,7 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
   printf("Matrice destinazione (PA): %p\n", &PA);
 #endif
 
-
+/*
 #if defined(PRINT_NUMBERS)
   cout<<"Matrices PA and PB: \n\n";
 
@@ -768,6 +771,7 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
   PA.PrintMatrix();
   PB.PrintMatrix();
 #endif
+*/
 
   //GENERALIZED PARALLEL OPERATION
 
@@ -788,12 +792,15 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
 
   double execution_time = (double)(toc-tic)/CLOCKS_PER_SEC;
 
+  C = PC.RemovePadding();
+
 #ifdef PRINT_NUMBERS
-  cout<<"Matrix PC after parallel operation: \n\n";
-  PC.PrintMatrix();
+  cout<<"Result matrix after unoptimized CPU operation: \n\n";
+  C.PrintMatrix();
   cout<<"\n";
   cout<<"Parallel execution in "<<execution_time<<" seconds.\n\n";
 #endif
+
 
   ThNumber = ThN;
 
@@ -806,17 +813,7 @@ double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int& div_1, int& div_2)
 {
   using namespace std;
   //PREP FOR THE DISUNIFORM TILING OF THE OPTIMIZED METHOD
-  /*
-  int Rdiv = div_2;
-  int Cdiv = div_1;
-  if(form_factor_result <= 1){
-    Rdiv = div_1;
-    Cdiv = div_2;
-  }
-  */
-  //int tR = A.Rows()/Rdiv;
-  //int tC = B.Columns()/Cdiv;
-  
+
   int Rdiv = (A.Rows()>B.Columns()) ? div_1 : div_2;
   int Cdiv = (A.Rows()>B.Columns()) ? div_2 : div_2;
 
@@ -847,7 +844,7 @@ double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int& div_1, int& div_2)
   double execution_time = (double)(toc_2-tic_2)/CLOCKS_PER_SEC;
 
 #ifdef PRINT_NUMBERS
-  cout<<"Matrix T after parallel operation: \n\n";
+  cout<<"Result matrix after optimized tiled CPU operation: \n\n";
   C.PrintMatrix();
   cout<<"\n";
   cout<<"Simple execution in "<<execution_time<<" seconds.\n\n";
