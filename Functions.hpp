@@ -644,7 +644,7 @@ public:
 
     for(int i=0; i<std::min(rows, second.rows); i++){
       for(int j=0; j<std::min(columns, second.columns); j++){
-        if(matrixpt[i][j] != second.matrixpt[i][j])
+        if(fabs(matrixpt[i][j] - second.matrixpt[i][j]) > (matrixpt[i][j] + second.matrixpt[i][j]) * 0.0001)
           return false;
       }
     }
