@@ -283,7 +283,9 @@ public:
 
   Matrix AddTilingPaddingRows(int tSize){
     if(rows%tSize == 0){
+#ifdef VERBOSE
       std::cout<<"Copia la matrice chiamante\n";
+#endif
       return *this;
     }else{
       int padding_rows = tSize - rows%tSize;
@@ -297,6 +299,9 @@ public:
 
   Matrix AddTilingPaddingColumns(int tSize){
     if(columns%tSize == 0){
+#ifdef VERBOSE
+      std::cout<<"Copia la matrice chiamante\n";
+#endif
       return *this;
     }else{
       int padding_columns = tSize - columns%tSize;
@@ -710,9 +715,9 @@ int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int thr
     div_1 = 1;
   }
 
-//#ifdef VERBOSE
+#ifdef VERBOSE
   cout<<"Closest divider is "<<div_1<<"\n";
-//#endif
+#endif
   
 
   int div_2 = (threads/div_1 > div_1) ? div_1 : threads/div_1;
@@ -725,9 +730,9 @@ int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int thr
   small_div = div_2;
   big_div = div_1;
 
-//#ifdef VERBOSE
+#ifdef VERBOSE
   cout<<"big_div="<<big_div<<", small div="<<small_div<<"\n\n";
-//#endif
+#endif
 
   int tSize;
   if(form_factor_result >= 1){
@@ -797,11 +802,11 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
     thread.join();
   }
 
+  C = PC.RemovePadding();
+
   clock_t toc = clock();
 
   double execution_time = (double)(toc-tic)/CLOCKS_PER_SEC;
-
-  C = PC.RemovePadding();
 
 #ifdef PRINT_NUMBERS
   cout<<"Result matrix after unoptimized CPU operation: \n\n";
@@ -822,6 +827,8 @@ double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C,
               int& div_1, int& div_2, int &tRo, int &tCo)
 {
   using namespace std;
+  //to be sure
+  C.ZeroMatrix();
   //PREP FOR THE DISUNIFORM TILING OF THE OPTIMIZED METHOD
 
   int Rdiv = (A.Rows()>B.Columns()) ? div_1 : div_2;
