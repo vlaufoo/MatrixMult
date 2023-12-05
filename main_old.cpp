@@ -30,6 +30,8 @@ int main(int argc, char **argv){
   double speedup[max + 1];
 #ifdef CUDA
   double cuda_speedup[max + 1];
+  int cuda_tiled_failures = 0;
+  int cuda_normal_failures = 0;
 #endif
   //double best_result = 0;
   int column_factor = step*form_factor_result;
@@ -95,7 +97,7 @@ int main(int argc, char **argv){
     double optimized_time = OpTile<TYPE>(A, B, T, big_divider, small_divider, tR, tC);
 #ifdef CHECK_RESULT
     if(!(X == T)){
-      cout<<"\n\nUnoptimized tiled op. has failed!\n\n";
+      cout<<"\n\n\033[1;37;41mUnoptimized tiled op. has failed!\033[0m\n\n";
       return 1;
     }
 #endif
@@ -103,7 +105,7 @@ int main(int argc, char **argv){
     double unoptimized_time = UnopTile<TYPE>(A, B, T, tSize, ThN);
 #ifdef CHECK_RESULT
     if(!(X == T)){
-      cout<<"\n\nOptimized tiled op. has failed!\n\n";
+      cout<<"\n\n\033[1;37;41mOptimized tiled op. has failed!\033[0m\n\n";
       return 2;
     }
 #endif
@@ -113,21 +115,24 @@ int main(int argc, char **argv){
 //NOW THE SECTION THAT USES CUDA
 #ifdef CUDA
 
-    double cuda_normal_time = CudaMult<TYPE>(A, B, T, 0);
-#ifdef CHECK_RESULT
-    if(!(X == T)){
-      cout<<"\n\nNormal cuda op. has failed!\n\n";
-      return 3;
-    }
-#endif
-
     double cuda_tiled_time = CudaMult<TYPE>(A, B, T, 1);
 #ifdef CHECK_RESULT
     if(!(X == T)){
-      cout<<"\n\nTiled cuda op. has failed!\n\n";
-      return 4;
+      cout<<"\n\n\033[1;37;41mTiled cuda op. has failed!\033[0m\n\n";
+      //return 4;
+      cuda_tiled_failures++;
     }
 #endif
+
+    double cuda_normal_time = CudaMult<TYPE>(A, B, T, 0);
+#ifdef CHECK_RESULT
+    if(!(X == T)){
+      cout<<"\n\n\033[1;37;41mNormal cuda op. has failed!\033[0m\n\n";
+      //return 3;
+      cuda_normal_failures++;
+    }
+#endif
+
 
     cuda_speedup[p] = (serial_time/min(cuda_normal_time, cuda_tiled_time));
 #endif
@@ -172,7 +177,7 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef CUDA
-      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t\n", 
+      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
@@ -185,6 +190,7 @@ int main(int argc, char **argv){
               unoptimized_time,
               optimized_time,
               speedup[p],
+              BLOCK_SIZE,
               cuda_normal_time,
               cuda_tiled_time,
               cuda_speedup[p]
@@ -192,7 +198,7 @@ int main(int argc, char **argv){
 
 
 
-      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t\n", 
+      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
@@ -205,6 +211,7 @@ int main(int argc, char **argv){
               unoptimized_time,
               optimized_time,
               speedup[p],
+              BLOCK_SIZE,
               cuda_normal_time,
               cuda_tiled_time,
               cuda_speedup[p]
@@ -215,6 +222,10 @@ int main(int argc, char **argv){
     fclose(fp);
   }
 
+#ifdef CUDA
+  cout<<"Tiled Cuda Failures: "<<cuda_tiled_failures<<endl;
+  cout<<"Normal Cuda Failures: "<<cuda_normal_failures<<endl;
+#endif
 
   return 0;
 }

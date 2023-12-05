@@ -28,7 +28,7 @@ all: main_CUDA main_old
 
 main_CUDA: main_old.cpp CudaFunctions.cu Functions.hpp makefile 
 	@./cudaprep.sh
-	nvcc main_old.cpp.cu -I./Common -o main_CUDA $(DEFINES) -D CUDA
+	nvcc main_old.cpp.cu -gencode arch=compute_61,code=sm_61 -I./Common -o main_CUDA $(DEFINES) -D CUDA
 	@rm *.cpp.cu
 	@echo removed .cpp.cu files
 

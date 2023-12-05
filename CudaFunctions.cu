@@ -9,7 +9,6 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
   int row = blockIdx.y * blockDim.y + threadIdx.x;
   int column = blockIdx.x * blockDim.x + threadIdx.y;
 
-  //__syncthreads();
 
   for(int i=0; i<A.width; i++){
     Cvalue += A.elements[row * A.width + i] * B.elements[i * B.width + column];
