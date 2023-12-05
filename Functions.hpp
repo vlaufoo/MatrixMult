@@ -751,9 +751,9 @@ template <typename T = int>
 double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumber)
 {
   using namespace std;
-  Matrix<T> PA = A.ForceAddTilingPaddingRows(tSize);
-  Matrix<T> PB = B.ForceAddTilingPaddingColumns(tSize);
-  Matrix<T> PC = C.ForceAddTilingPadding(tSize);
+  Matrix<T> PA = A.AddTilingPaddingRows(tSize);
+  Matrix<T> PB = B.AddTilingPaddingColumns(tSize);
+  Matrix<T> PC = C.AddTilingPadding(tSize);
 
   PC.ZeroMatrix();
 

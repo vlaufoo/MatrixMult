@@ -52,9 +52,9 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
 {
   using namespace std;
 
-  Matrix<T> CA = A.ForceAddTilingPaddingRows(BLOCK_SIZE);
-  Matrix<T> CB = B.ForceAddTilingPaddingColumns(BLOCK_SIZE);
-  Matrix<T> CC = C.ForceAddTilingPadding(BLOCK_SIZE);
+  Matrix<T> CA = A.AddTilingPaddingRows(BLOCK_SIZE);
+  Matrix<T> CB = B.AddTilingPaddingColumns(BLOCK_SIZE);
+  Matrix<T> CC = C.AddTilingPadding(BLOCK_SIZE);
   struct mat<T> h_A, h_B, h_C;
 
   //h for host
