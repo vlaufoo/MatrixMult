@@ -124,6 +124,7 @@ int main(int argc, char **argv){
     }
 #endif
 
+/*
     double cuda_normal_time = CudaMult<TYPE>(A, B, T, 0);
 #ifdef CHECK_RESULT
     if(!(X == T)){
@@ -132,9 +133,9 @@ int main(int argc, char **argv){
       cuda_normal_failures++;
     }
 #endif
+*/
 
-
-    cuda_speedup[p] = (serial_time/min(cuda_normal_time, cuda_tiled_time));
+    cuda_speedup[p] = (serial_time/cuda_tiled_time);
 #endif
 
     if(p == max){
@@ -177,7 +178,7 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef CUDA
-      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t%5f\t\n", 
+      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
@@ -191,14 +192,14 @@ int main(int argc, char **argv){
               optimized_time,
               speedup[p],
               BLOCK_SIZE,
-              cuda_normal_time,
+//              cuda_normal_time,
               cuda_tiled_time,
               cuda_speedup[p]
              );
 
 
 
-      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t%5f\t\n", 
+      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
@@ -212,7 +213,7 @@ int main(int argc, char **argv){
               optimized_time,
               speedup[p],
               BLOCK_SIZE,
-              cuda_normal_time,
+//              cuda_normal_time,
               cuda_tiled_time,
               cuda_speedup[p]
              );

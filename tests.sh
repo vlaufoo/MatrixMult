@@ -1,7 +1,7 @@
 #!/bin/bash
 version=$5
 
-echo -e "R\tC\tT\tSi\tOp_FF\tRes_FF\tSt\tPt\tiPt\tSU\tbSize\tCudat\tCuTilet\tCuSU\tSeed:${3}\n" > "$3_$1_$2_$4.txt"
+echo -e "R\tC\tT\tSi\tOp_FF\tRes_FF\tSt\tPt\tiPt\tSU\tbSize\tCuTilet\tCuSU\tSeed:${3}\n" > "$3_$1_$2_$4.txt"
 sleep 2
 for t in 2 4 6 8 10
 do
