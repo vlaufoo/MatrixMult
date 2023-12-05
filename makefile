@@ -1,6 +1,16 @@
 enable := 1
+disable := 0
+#default block size is 16, but it can be specified to a different number
+block ?= 0
+type ?= 0
 
-DEFINES := -D BLOCK_SIZE=16
+ifneq ($(type), $(disable))
+	DEFINES := -D TYPE=$(type)
+endif
+
+ifneq ($(block), $(disable))
+	DEFINES += -D BLOCK_SIZE=$(block)
+endif
 
 ifeq ($(numbers), $(enable))
 	DEFINES += -D PRINT_NUMBERS
@@ -14,6 +24,7 @@ ifeq ($(check), $(enable))
 	DEFINES += -D CHECK_RESULT
 endif
 
+all: main_CUDA main_old
 
 main_CUDA: main_old.cpp CudaFunctions.cu Functions.hpp makefile 
 	@./cudaprep.sh

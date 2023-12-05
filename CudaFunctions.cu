@@ -130,10 +130,11 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
 
   checkCudaErrors(cudaMemcpy(h_C.elements, d_C.elements, Csize, cudaMemcpyDeviceToHost));
 
-  clock_t toc = clock();
 
   CC.InitMatrix(h_C.elements, h_C.height * h_C.width);
   C = CC.RemovePadding();
+
+  clock_t toc = clock();
 
   double execution_time = (double)(toc-tic)/CLOCKS_PER_SEC;
 

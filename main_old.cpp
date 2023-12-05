@@ -1,6 +1,8 @@
 #include"Functions.hpp"
 
-
+#ifndef TYPE
+#define TYPE int
+#endif
 
 int main(int argc, char **argv){
 
@@ -24,12 +26,15 @@ int main(int argc, char **argv){
 
   int p;
   int max = steps_amt;
-  int best_dimensions = 0;
+  //int best_dimensions = 0;
   double speedup[max + 1];
-  double best_result = 0;
+#ifdef CUDA
+  double cuda_speedup[max + 1];
+#endif
+  //double best_result = 0;
   int column_factor = step*form_factor_result;
 
-  cout<<"Rows\tColumns\tthreads\tTile\tOperandsFF\tResultFF\tSerial\tParallel\t\tSpeedup\n";
+  cout<<"Rows\tColumns\tthreads\tTile\ttRows\tCols\tOperandsFF\tResultFF\tSerial\tParallel\t\tSpeedup\n";
 
   string filename = "./" + string(argv[2]) + "_" + string(argv[3]) +  "_" + string(argv[4]) + "_" + string(argv[7]) + ".txt";
   FILE *fp;
@@ -50,14 +55,14 @@ int main(int argc, char **argv){
       fprintf(fp, "\n");
 
     //INITIALIZE MATRIX:
-    Matrix A((start_step+p)*step, (start_step+p)*step*form_factor_operands);
-    Matrix B((start_step+p)*step*form_factor_operands, (start_step+p)*column_factor);
+    Matrix<TYPE> A((start_step+p)*step, (start_step+p)*step*form_factor_operands);
+    Matrix<TYPE> B((start_step+p)*step*form_factor_operands, (start_step+p)*column_factor);
     A.RandomMatrix(50, 400, seed);
     B.RandomMatrix(50, 400, seed);
-    Matrix X((start_step+p)*step, (start_step+p)*column_factor);
-    Matrix Y((start_step+p)*step, (start_step+p)*column_factor);
+    Matrix<TYPE> X((start_step+p)*step, (start_step+p)*column_factor);
+    Matrix<TYPE> Y((start_step+p)*step, (start_step+p)*column_factor);
     //testing if the loop function is slowing down the operation
-    Matrix T = X;
+    Matrix<TYPE> T = X;
 
 #if defined(PRINT_NUMBERS)
     cout<<"Matrices A and B: \n\n";
@@ -82,11 +87,12 @@ int main(int argc, char **argv){
 
     int big_divider, small_divider, ThN;
 
-    int tSize = BestSquareTiling(A, B, form_factor_result, threads, big_divider, small_divider);
+    int tSize = BestSquareTiling<TYPE>(A, B, form_factor_result, threads, big_divider, small_divider);
 
     double serial_time = (double)(toc_1 - tic_1)/CLOCKS_PER_SEC;
 
-    double optimized_time = OpTile(A, B, T, big_divider, small_divider);
+    int tR, tC;
+    double optimized_time = OpTile<TYPE>(A, B, T, big_divider, small_divider, tR, tC);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\nUnoptimized tiled op. has failed!\n\n";
@@ -94,7 +100,7 @@ int main(int argc, char **argv){
     }
 #endif
 
-    double unoptimized_time = UnopTile(A, B, T, tSize, ThN);
+    double unoptimized_time = UnopTile<TYPE>(A, B, T, tSize, ThN);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\nOptimized tiled op. has failed!\n\n";
@@ -107,7 +113,7 @@ int main(int argc, char **argv){
 //NOW THE SECTION THAT USES CUDA
 #ifdef CUDA
 
-    double cuda_normal_time = CudaMult(A, B, T, 0);
+    double cuda_normal_time = CudaMult<TYPE>(A, B, T, 0);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\nNormal cuda op. has failed!\n\n";
@@ -115,7 +121,7 @@ int main(int argc, char **argv){
     }
 #endif
 
-    double cuda_tiled_time = CudaMult(A, B, T, 1);
+    double cuda_tiled_time = CudaMult<TYPE>(A, B, T, 1);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\nTiled cuda op. has failed!\n\n";
@@ -123,7 +129,7 @@ int main(int argc, char **argv){
     }
 #endif
 
-
+    cuda_speedup[p] = (serial_time/min(cuda_normal_time, cuda_tiled_time));
 #endif
 
     if(p == max){
@@ -131,11 +137,13 @@ int main(int argc, char **argv){
     }else{
 
 #ifndef CUDA
-      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t", 
+      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
               tSize,
+              tR,
+              tC,
               form_factor_operands,
               form_factor_result,
               serial_time,
@@ -144,30 +152,33 @@ int main(int argc, char **argv){
               speedup[p]
              );
 
-      std::cout 
-        << X.Rows() << "\t"
-        << X.Columns() << "\t"
-        << ThN << "\t"
-        << tSize << "\t"
-        << form_factor_operands << "\t"
-        << form_factor_result << "\t"
-        << std::fixed 
-        << serial_time
-        << unoptimized_time
-        << optimized_time
-        << speedup[p] << "\t";
 
-      //segnare miglior risultato per curiosità
-      cout<<endl;
-      fprintf(fp, "\n");
-#endif
 
-#ifdef CUDA
-      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t", 
+      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
               tSize,
+              tR,
+              tC,
+              form_factor_operands,
+              form_factor_result,
+              serial_time,
+              unoptimized_time,
+              optimized_time,
+              speedup[p]
+             );
+      //segnare miglior risultato per curiosità
+#endif
+
+#ifdef CUDA
+      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t\n", 
+              X.Rows(),
+              X.Columns(),
+              ThN, //ThN, previously confirmed the length of the thread vector, now useless
+              tSize,
+              tR,
+              tC,
               form_factor_operands,
               form_factor_result,
               serial_time,
@@ -175,33 +186,34 @@ int main(int argc, char **argv){
               optimized_time,
               speedup[p],
               cuda_normal_time,
-              cuda_tiled_time
+              cuda_tiled_time,
+              cuda_speedup[p]
              );
 
-      std::cout 
-        << X.Rows() << "\t"
-        << X.Columns() << "\t"
-        << ThN << "\t"
-        << tSize << "\t"
-        << form_factor_operands << "\t"
-        << form_factor_result << "\t"
-        << std::fixed 
-        << serial_time
-        << unoptimized_time
-        << optimized_time
-        << speedup[p] << "\t";
 
-      //segnare miglior risultato per curiosità
-      cout<<endl;
+
+      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t%5f\t\n", 
+              X.Rows(),
+              X.Columns(),
+              ThN, //ThN, previously confirmed the length of the thread vector, now useless
+              tSize,
+              tR,
+              tC,
+              form_factor_operands,
+              form_factor_result,
+              serial_time,
+              unoptimized_time,
+              optimized_time,
+              speedup[p],
+              cuda_normal_time,
+              cuda_tiled_time,
+              cuda_speedup[p]
+             );
 #endif
-
     }
 
     fclose(fp);
   }
-
-
-  cout<<"\n\n\nBest: "<<(best_result)<<" obtained with "<<best_dimensions*step<<" rows, "<<best_dimensions*column_factor<<" columns."<<endl;
 
 
   return 0;

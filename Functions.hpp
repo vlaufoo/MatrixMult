@@ -5,8 +5,7 @@
 #include<ctime>
 #include<cstdio>
 #include<vector>
-#include<type_traits>
-#include<cmath>
+//#include<type_traits>
 #include<string>
 
 
@@ -711,7 +710,11 @@ int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int thr
     div_1 = 1;
   }
 
+//#ifdef VERBOSE
   cout<<"Closest divider is "<<div_1<<"\n";
+//#endif
+  
+
   int div_2 = (threads/div_1 > div_1) ? div_1 : threads/div_1;
   div_1 = threads/div_2;
   if(div_2 == 0){
@@ -721,6 +724,10 @@ int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int thr
 
   small_div = div_2;
   big_div = div_1;
+
+//#ifdef VERBOSE
+  cout<<"big_div="<<big_div<<", small div="<<small_div<<"\n\n";
+//#endif
 
   int tSize;
   if(form_factor_result >= 1){
@@ -734,6 +741,8 @@ int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int thr
       tSize++;
     }
   }
+
+  cout<<"tSize="<<tSize<<endl;
 
   return tSize;
 
@@ -809,7 +818,8 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
 
 
 template <typename T = int>
-double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int& div_1, int& div_2)
+double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C,
+              int& div_1, int& div_2, int &tRo, int &tCo)
 {
   using namespace std;
   //PREP FOR THE DISUNIFORM TILING OF THE OPTIMIZED METHOD
@@ -849,7 +859,8 @@ double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int& div_1, int& div_2)
   cout<<"\n";
   cout<<"Simple execution in "<<execution_time<<" seconds.\n\n";
 #endif
-
+  tRo = tR;
+  tCo = tC;
 
   return execution_time;
 
