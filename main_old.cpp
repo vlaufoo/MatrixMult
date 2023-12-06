@@ -76,36 +76,31 @@ int main(int argc, char **argv){
 
 
     //NORMAL OPERATION
-    clock_t tic_1 = clock();
-    X = A*B;
-    clock_t toc_1 = clock();
+    double serial_time = A.MeasureMultTime(B, X);
 
 
 #if defined(PRINT_NUMBERS)
     cout<<"Matrix X after serial operation: \n\n";
     X.PrintMatrix();
-//    cout<<"Serial execution in "<<(double)(toc_1 - tic_1)/CLOCKS_PER_SEC<<" seconds.\n\n";
+//    cout<<"Serial execution in "<<serial_time/CLOCKS_PER_SEC<<" seconds.\n\n";
 #endif
 
-    int big_divider, small_divider, ThN;
+    int ThN, Rdiv, Cdiv;
 
-    int tSize = BestSquareTiling<TYPE>(A, B, form_factor_result, threads, big_divider, small_divider);
+    int tSize = BestSquareTiling<TYPE>(A, B, form_factor_result, threads, Rdiv, Cdiv);
 
-    double serial_time = (double)(toc_1 - tic_1)/CLOCKS_PER_SEC;
-
-    int tR, tC;
-    double optimized_time = OpTile<TYPE>(A, B, T, big_divider, small_divider, tR, tC);
+    double optimized_time = OpTile<TYPE>(A, B, T, Rdiv, Cdiv);
 #ifdef CHECK_RESULT
     if(!(X == T)){
-      cout<<"\n\n\033[1;37;41mUnoptimized tiled op. has failed!\033[0m\n\n";
+      cout<<"\n\n\033[1;37;41mOptimized tiled op. has failed!\033[0m\n\n";
       return 1;
     }
 #endif
 
-    double unoptimized_time = UnopTile<TYPE>(A, B, T, tSize, ThN);
+    double unoptimized_time = UnopTile<TYPE>(A, B, T, tSize, ThN, Rdiv, Cdiv);
 #ifdef CHECK_RESULT
     if(!(X == T)){
-      cout<<"\n\n\033[1;37;41mOptimized tiled op. has failed!\033[0m\n\n";
+      cout<<"\n\n\033[1;37;41mUnoptimized tiled op. has failed!\033[0m\n\n";
       return 2;
     }
 #endif
@@ -115,7 +110,7 @@ int main(int argc, char **argv){
 //NOW THE SECTION THAT USES CUDA
 #ifdef CUDA
 
-    double cuda_tiled_time = CudaMult<TYPE>(A, B, T, 1);
+    double cuda_tiled_time = CudaMult<TYPE>(A, B, T, Rdiv, Cdiv, 1);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\n\033[1;37;41mTiled cuda op. has failed!\033[0m\n\n";
@@ -125,7 +120,7 @@ int main(int argc, char **argv){
 #endif
 
 /*
-    double cuda_normal_time = CudaMult<TYPE>(A, B, T, 0);
+    double cuda_normal_time = CudaMult<TYPE>(A, B, T, Rdiv, Cdiv, 0);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\n\033[1;37;41mNormal cuda op. has failed!\033[0m\n\n";
@@ -143,13 +138,11 @@ int main(int argc, char **argv){
     }else{
 
 #ifndef CUDA
-      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
+      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
               tSize,
-              tR,
-              tC,
               form_factor_operands,
               form_factor_result,
               serial_time,
@@ -160,13 +153,11 @@ int main(int argc, char **argv){
 
 
 
-      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
+      printf("%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
               tSize,
-              tR,
-              tC,
               form_factor_operands,
               form_factor_result,
               serial_time,
@@ -178,13 +169,11 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef CUDA
-      fprintf(fp, "%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
+      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
               tSize,
-              tR,
-              tC,
               form_factor_operands,
               form_factor_result,
               serial_time,
@@ -199,13 +188,11 @@ int main(int argc, char **argv){
 
 
 
-      printf("%d\t%d\t%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
+      printf("%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
               tSize,
-              tR,
-              tC,
               form_factor_operands,
               form_factor_result,
               serial_time,

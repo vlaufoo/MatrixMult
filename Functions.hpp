@@ -246,9 +246,10 @@ public:
     }
   }
 
-  Matrix ForceAddTilingPaddingRows(int tSize){
+  Matrix ForceAddTilingPaddingRows(const int tSize, const int Rdiv){
 
-    int padding_rows = (rows%tSize == 0) ? tSize : (tSize-rows%tSize);
+    int padding_rows = (rows%tSize == 0 && tSize * Rdiv != rows) ?
+                        tSize : (tSize-rows%tSize);
 
     Matrix temp(rows+padding_rows, columns);
     Matrix result = *this || temp;
@@ -259,9 +260,10 @@ public:
     return result;
   }
 
-  Matrix ForceAddTilingPaddingColumns(int tSize){
+  Matrix ForceAddTilingPaddingColumns(const int tSize, const int Cdiv){
 
-    int padding_columns = (columns%tSize == 0) ? tSize : (tSize-columns%tSize);
+    int padding_columns = (columns%tSize == 0 && tSize * Cdiv != columns) ?
+                          tSize : (tSize-columns%tSize);
 
     Matrix temp(rows, columns+padding_columns);
     Matrix result = *this || temp;
@@ -269,10 +271,12 @@ public:
     return result;
   }
 
-  Matrix ForceAddTilingPadding(int tSize){
+  Matrix ForceAddTilingPadding(const int tSize, const int Rdiv, const int Cdiv){
 
-    int padding_rows = (rows%tSize == 0) ? tSize : (tSize-rows%tSize);
-    int padding_columns = (columns%tSize == 0) ? tSize : (tSize-columns%tSize);
+    int padding_rows = (rows%tSize == 0 && tSize * Rdiv != rows) ?
+                        tSize : (tSize-rows%tSize);
+    int padding_columns = (columns%tSize == 0 && tSize * Cdiv != columns) ?
+                          tSize : (tSize-columns%tSize);
 
     Matrix temp(rows+padding_rows, columns+padding_columns);
     Matrix result = *this || temp;
@@ -497,16 +501,6 @@ public:
     }
   }
 
-#ifdef CUDA
-
-  void TransferMatrix(T* data){
-    for (int i = 0; i<rows; ++i){
-      for(int j = 0; j<columns; ++j){
-        data[i*columns + j] = matrixpt[i][j];
-      }
-    }
-  }
-
   //GPU implementation  (CUDA) (commented since it's unadvisable to do it in a class, especially
   //                            if the object I'll be using will be in host memory)
   //  __global__ void MultiplyTilesOnce_CUDA(Matrix& A, Matrix& B, int tSize){
@@ -539,7 +533,6 @@ public:
   //    //Questa siga non la capisco, temp è uno scalare o una matrice?
   //    C.matrixpt[row][column] = temp;
   //  }
-#endif
 
 
   //OPERATORS
@@ -563,10 +556,11 @@ public:
   }
 
   Matrix operator||(Matrix second){   //an extended sum where if the value of index 
-    //i, j i spresent in one matrix but not the other
+    //i, j is spresent in one matrix but not the other
     //that value is taken as the result, so the result matrix
     //always has the most rows and most columns among the
     //operands
+
 #ifdef VERBOSE
     if(rows != second.rows || columns != second.columns){
       std::cout<<"\e[93mMatrix dimensions don't match in the sum operation.\e[39m\n";
@@ -653,6 +647,31 @@ public:
   }
 
 
+  double MeasureMultTime(Matrix& second, Matrix& result){
+    double execution_time;
+    
+    if(columns != second.rows){
+      std::cout<<"Matrices have incompatible dimensions.\n";
+      std::exit(403);
+    }
+
+    clock_t tic = clock();
+
+    for(i=0; i<rows; i++){
+      for(j=0; j<second.columns; j++){
+        for(k=0; k<columns; k++){
+          result.matrixpt[i][j]+=matrixpt[i][k]*second.matrixpt[k][j];
+        }
+      }
+    }
+
+    clock_t toc = clock();
+
+    execution_time = (double)(toc-tic)/CLOCKS_PER_SEC;
+
+    return execution_time;
+  }
+
 
   //DESTRUCTOR
   ~Matrix(){
@@ -693,56 +712,61 @@ void SingleTileThread(int threadId, Matrix<T>& Destination, Matrix<T>& A, Matrix
     Destination.MultiplyTilesOnce(A, B, k, i, j, tSize);
   }
 }
+
+
 template <typename T = int>
-int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int threads, int& big_div, int &small_div)
+int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, float form_factor_result, int threads, int& Rdiv, int& Cdiv)
 {
   using namespace std;
   //PREP FOR TILING OF THE MATRICES
 
   //find the best square tiling for this matrix (allowing for padding)
-  int div_1;
+  int big_div;
   if(form_factor_result >= 1){
-    div_1 = round(sqrt(threads*form_factor_result));
+    big_div = round(sqrt(threads*form_factor_result));
   }else{
-    div_1 = round(sqrt(threads/form_factor_result));
+    big_div = round(sqrt(threads/form_factor_result));
   }
 
-  if(div_1 <= threads){
-    while(threads % div_1 != 0){
-      div_1 = div_1 + 1;
+  if(big_div <= threads){
+    while(threads % big_div != 0){
+      big_div = big_div + 1;
     }
-  }else if(div_1 == 0){
-    div_1 = 1;
+  }else if(big_div == 0){
+    big_div = 1;
   }
 
-#ifdef VERBOSE
-  cout<<"Closest divider is "<<div_1<<"\n";
-#endif
+//#ifdef VERBOSE
+  cout<<"FFR = "<<form_factor_result<<endl<<"Threads = "<<threads<<endl;
+  cout<<"Closest divider is "<<big_div<<"\n";
+//#endif
   
 
-  int div_2 = (threads/div_1 > div_1) ? div_1 : threads/div_1;
-  div_1 = threads/div_2;
-  if(div_2 == 0){
-    div_2 = 1;
-    div_1 = threads;
+  int small_div = (threads/big_div > big_div) ? big_div : threads/big_div;
+  big_div = threads/small_div;
+  if(small_div == 0){
+    small_div = 1;
+    big_div = threads;
   }
 
-  small_div = div_2;
-  big_div = div_1;
-
-#ifdef VERBOSE
+//#ifdef VERBOSE
   cout<<"big_div="<<big_div<<", small div="<<small_div<<"\n\n";
-#endif
+//#endif
+
+  //CALCULATING ROWS AND COLUMNS OF RECTANGULAR TILES TO BE USED IN OpTile()
+  Rdiv = (A.Rows()>B.Columns()) ? big_div : small_div;
+  Cdiv = (A.Rows()>B.Columns()) ? small_div : big_div;
+
 
   int tSize;
   if(form_factor_result >= 1){
-    tSize = A.Rows()/div_2;
-    while(A.Rows() > div_2*tSize || B.Columns() > div_1*tSize){
+    tSize = A.Rows()/small_div;
+    while(A.Rows() > small_div*tSize || B.Columns() > big_div*tSize){
       tSize++;
     }
   }else{
-    tSize = B.Columns()/div_2;
-    while(A.Rows() > div_1*tSize || B.Columns() > div_2*tSize){
+    tSize = B.Columns()/small_div;
+    while(A.Rows() > big_div*tSize || B.Columns() > small_div*tSize){
       tSize++;
     }
   }
@@ -752,19 +776,25 @@ int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, int form_factor_result, int thr
   return tSize;
 
 }
+
+
 template <typename T = int>
-double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumber)
+double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize,
+                int& ThNumber, const int Rdiv, const int Cdiv)
 {
   using namespace std;
-  Matrix<T> PA = A.AddTilingPaddingRows(tSize);
-  Matrix<T> PB = B.AddTilingPaddingColumns(tSize);
-  Matrix<T> PC = C.AddTilingPadding(tSize);
-
-  PC.ZeroMatrix();
 
 #ifdef VERBOSE
   cout<<"tSize = "<<tSize<<"\n\n";
 #endif
+
+  C.ZeroMatrix();
+
+  clock_t tic = clock(); //----------------------------------------------------------------
+
+  Matrix<T> PA = A.ForceAddTilingPaddingRows(tSize, Rdiv);
+  Matrix<T> PB = B.ForceAddTilingPaddingColumns(tSize, Cdiv);
+  Matrix<T> PC = C.ForceAddTilingPadding(tSize, Rdiv, Cdiv);
 
   //calculating iteration number and prepping threads
   vector<thread> kernels;
@@ -777,19 +807,7 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
   printf("Matrice destinazione (PA): %p\n", &PA);
 #endif
 
-/*
-#if defined(PRINT_NUMBERS)
-  cout<<"Matrices PA and PB: \n\n";
-
-  //NOW THE MATRICES HAVE PADDING
-  PA.PrintMatrix();
-  PB.PrintMatrix();
-#endif
-*/
-
   //GENERALIZED PARALLEL OPERATION
-
-  clock_t tic = clock();
 
   for(int i=0; i<PA.Rows()/tSize; i++){
     for(int j=0; j<PB.Columns()/tSize; j++){
@@ -802,9 +820,10 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
     thread.join();
   }
 
+
   C = PC.RemovePadding();
 
-  clock_t toc = clock();
+  clock_t toc = clock(); //-----------------------------------------------------------------
 
   double execution_time = (double)(toc-tic)/CLOCKS_PER_SEC;
 
@@ -824,31 +843,30 @@ double UnopTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C, int tSize, int& ThNumb
 
 template <typename T = int>
 double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C,
-              int& div_1, int& div_2, int &tRo, int &tCo)
+              const int Rdiv, const int Cdiv)
 {
   using namespace std;
   //to be sure
   C.ZeroMatrix();
+  int rows_in_tile = C.Rows()/Rdiv;
+  if(rows_in_tile * Rdiv < C.Rows())
+    rows_in_tile++;
+
+  int cols_in_tile = C.Columns()/Cdiv;
+  if(cols_in_tile * Cdiv < C.Columns())
+    cols_in_tile++;
+
   //PREP FOR THE DISUNIFORM TILING OF THE OPTIMIZED METHOD
-
-  int Rdiv = (A.Rows()>B.Columns()) ? div_1 : div_2;
-  int Cdiv = (A.Rows()>B.Columns()) ? div_2 : div_2;
-
-  int tR = A.Rows()/Rdiv;
-  int tC = B.Columns()/Cdiv;
-
-  if(A.Rows()%Rdiv != 0)
-    tR++;
-  if(B.Columns()%Cdiv != 0)
-    tC++;
-
   //START OF THE OPTIMIZED PARALLEL OPERATION (NO PADDING NEEDED)
   std::vector<std::thread> tiles;
-  clock_t tic_2 = clock();
+
+  clock_t tic_2 = clock(); //-----------------------------------------------------------
+
   //parallel execution
-  for(int i=0; i<Rdiv; i++){
-    for(int j=0; j<Cdiv; j++){
-      tiles.emplace_back(&Matrix<T>::GetResultTile, ref(C), ref(A), ref(B), i, j, tR, tC);
+  for(int i=0; i < Rdiv; i++){
+    for(int j=0; j < Cdiv; j++){
+      tiles.emplace_back(&Matrix<T>::GetResultTile, ref(C), ref(A), ref(B),
+                         i, j, rows_in_tile, cols_in_tile);
     }
   }
 
@@ -856,7 +874,7 @@ double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C,
     thread.join();
   }
 
-  clock_t toc_2 = clock();
+  clock_t toc_2 = clock(); //-----------------------------------------------------------
 
   double execution_time = (double)(toc_2-tic_2)/CLOCKS_PER_SEC;
 
@@ -866,8 +884,6 @@ double OpTile(Matrix<T> &A, Matrix<T> &B, Matrix<T> &C,
   cout<<"\n";
   cout<<"Simple execution in "<<execution_time<<" seconds.\n\n";
 #endif
-  tRo = tR;
-  tCo = tC;
 
   return execution_time;
 

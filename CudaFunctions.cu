@@ -46,7 +46,7 @@ __global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat
 
 
 template <typename T = int>
-double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
+double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int Rdiv, const int Cdiv, bool tiled_mode)
 //BLOCK_SIZE deve essere potenza di due, o meglio è preferibile che lo sia
 {
   using namespace std;
@@ -54,6 +54,8 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
   Matrix<T> CA = A.AddTilingPaddingRows(BLOCK_SIZE);
   Matrix<T> CB = B.AddTilingPaddingColumns(BLOCK_SIZE);
   Matrix<T> CC = C.AddTilingPadding(BLOCK_SIZE);
+
+  clock_t tic = clock(); //-----------------------------------------------------------------------------
   struct mat<T> h_A, h_B, h_C;
 
   //h for host
@@ -79,11 +81,10 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
   checkCudaErrors(cudaMallocHost(&h_B.elements, Bsize));
   checkCudaErrors(cudaMallocHost(&h_C.elements, Csize));
 
+
+
   CA.BlurtMatrix(h_A.elements);
   CB.BlurtMatrix(h_B.elements);
-
-  clock_t tic = clock();
-
 
 
   //now to allocate GPU memory
@@ -133,7 +134,7 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
   CC.InitMatrix(h_C.elements, h_C.height * h_C.width);
   C = CC.RemovePadding();
 
-  clock_t toc = clock();
+  clock_t toc = clock(); //---------------------------------------------------------------------------
 
   double execution_time = (double)(toc-tic)/CLOCKS_PER_SEC;
 
