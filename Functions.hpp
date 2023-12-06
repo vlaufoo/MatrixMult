@@ -248,9 +248,7 @@ public:
 
   Matrix ForceAddTilingPaddingRows(const int tSize, const int Rdiv){
 
-    int padding_rows = (rows%tSize == 0 && tSize * Rdiv != rows) ?
-                        tSize : (tSize-rows%tSize);
-
+    int padding_rows = Rdiv * tSize - rows;
     Matrix temp(rows+padding_rows, columns);
     Matrix result = *this || temp;
 #ifdef VERBOSE
@@ -262,9 +260,7 @@ public:
 
   Matrix ForceAddTilingPaddingColumns(const int tSize, const int Cdiv){
 
-    int padding_columns = (columns%tSize == 0 && tSize * Cdiv != columns) ?
-                          tSize : (tSize-columns%tSize);
-
+    int padding_columns = Cdiv * tSize - columns;
     Matrix temp(rows, columns+padding_columns);
     Matrix result = *this || temp;
     result.padded_columns = padding_columns+padded_columns;
@@ -273,10 +269,8 @@ public:
 
   Matrix ForceAddTilingPadding(const int tSize, const int Rdiv, const int Cdiv){
 
-    int padding_rows = (rows%tSize == 0 && tSize * Rdiv != rows) ?
-                        tSize : (tSize-rows%tSize);
-    int padding_columns = (columns%tSize == 0 && tSize * Cdiv != columns) ?
-                          tSize : (tSize-columns%tSize);
+    int padding_rows = Rdiv * tSize - rows;
+    int padding_columns = Cdiv * tSize - columns;
 
     Matrix temp(rows+padding_rows, columns+padding_columns);
     Matrix result = *this || temp;
@@ -754,21 +748,14 @@ int BestSquareTiling(Matrix<T>& A, Matrix<T>& B, float form_factor_result, int t
 //#endif
 
   //CALCULATING ROWS AND COLUMNS OF RECTANGULAR TILES TO BE USED IN OpTile()
-  Rdiv = (A.Rows()>B.Columns()) ? big_div : small_div;
-  Cdiv = (A.Rows()>B.Columns()) ? small_div : big_div;
+  Rdiv = (form_factor_result >= 1) ? small_div : big_div;
+  Cdiv = (form_factor_result >= 1) ? big_div : small_div;
 
 
-  int tSize;
-  if(form_factor_result >= 1){
-    tSize = A.Rows()/small_div;
-    while(A.Rows() > small_div*tSize || B.Columns() > big_div*tSize){
-      tSize++;
-    }
-  }else{
-    tSize = B.Columns()/small_div;
-    while(A.Rows() > big_div*tSize || B.Columns() > small_div*tSize){
-      tSize++;
-    }
+  int tSize = (form_factor_result >= 1) ? (A.Rows()/Rdiv) : (B.Columns()/Cdiv);
+  cout<<"tSize="<<tSize<<endl;
+  while(A.Rows() > tSize * Rdiv || B.Columns() > tSize * Cdiv){
+    tSize++;
   }
 
   cout<<"tSize="<<tSize<<endl;
