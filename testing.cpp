@@ -1,125 +1,27 @@
-#include<iostream>
-#include<cstdio>
-#include"Classes.h"
-#include<thread>
-#include<vector>
-#include<mutex>
-#include<ctime>
-#include<cmath>
+#include"Functions.hpp"
 
-void SingleTileThread(Matrix& Destination, Matrix& A, Matrix& B, int iterations, int i, int j, int tSize){
+#define TYPE int
 
-  for(int k=0; k<iterations; k++){
-    Destination.MultiplyTilesOnce(A, B, k, i, j, tSize);
-  }
-}
-
-
-
-int main(int argc, char **argv){
-
+int main(int argc, char** argv){
   using namespace std;
+  Matrix<TYPE> A(240, 240);
+  Matrix<TYPE> B(240, 480);
 
+  Matrix<TYPE> C(A.Rows(), B.Columns());
+  Matrix<TYPE> T = C;
 
-//  int** result = new int*[p*R_STEP];
-//  for(int i = 0; i<p*R_STEP; i++){
-//    result[i] = new int[p*column_factor];
-//    for(int j=0; j<p*column_factor; j++){
-//      result[i][j] = 0;
-//      cout<<result[i][j]<<"\t";
-//    }
-//    cout<<"\n";
-//  }
-//  cout<<"\n";
+  A.RandomMatrix(0, 60, 94234852);
+  B.RandomMatrix(0, 60, 12334564);
 
+  int Rdiv, Cdiv;
 
+  int tSize = BestSquareTiling<TYPE>(A, B, 2, 6, Rdiv, Cdiv);
 
-  Matrix A(12, 7);
-  Matrix B(7, 6);
+  Matrix<TYPE> PC = C.ForceAddTilingPadding(tSize, Rdiv, Cdiv);
 
-  Matrix X(12, 6);
-  Matrix Y(12, 6);
+  cout<<"\n\nRows of tiles: "<<PC.Rows()/tSize<<" while Rdiv is "<<Rdiv<<"\n\n";
+  cout<<"\n\nCols of tiles: "<<PC.Columns()/tSize<<" while Cdiv is "<<Cdiv<<"\n\n";
 
-  A.RandomMatrix(0, 20, 290083);
-  B.RandomMatrix(3, 15, 879273);
-
-  A.PrintMatrix();
-  B.PrintMatrix();
-
-  int tSize = 6;
-
-  Matrix PA = A.AddTilingPaddingRows(tSize);
-  Matrix PB = B.AddTilingPaddingColumns(tSize);
-  Matrix PX = X.AddTilingPadding(tSize);
-  Matrix PY = Y.AddTilingPadding(tSize);
-
-  Matrix PT = PY;
-
-  PA.PrintMatrix();
-  PB.PrintMatrix();
-
-  cout<<"\n\nTile size is: "<<tSize<<endl;
-
-  std::vector<std::thread> threads;
-
-  int ThN = 0;
-  int i, j, k;
-  int iterations = PA.Columns()/tSize;
-  if(PA.Columns()%tSize != 0)
-    iterations++;
-
-  //PX = PA*PB;
-  //PX.PrintMatrix();
-  //	PX.PrintMatrix();	
-  //serial execution
-  for(i=0; i<PA.Rows()/tSize; i++){
-    for(j=0; j<PB.Columns()/tSize; j++){
-      cout<<"Prova\n";
-      //PY.GetResultTile(PA, PB, iterations, i, j, tSize);
-    }
-  }
-
-  //pariallel execution
-    for(i=0; i<A.Rows()/tSize; i++){
-      for(j=0; j<B.Columns()/tSize; j++){
-        //threads.emplace_back(SingleTileThread, std::ref(Y), std::ref(A), std::ref(B), iterations, i, j, tSize);
-//        threads.emplace_back(SingleTileThread, std::ref(PY), std::ref(PA), std::ref(PB), iterations, i, j, tSize);
-        threads.emplace_back(&Matrix::GetResultTile, ref(PY), ref(PA), ref(PB), iterations, i, j, tSize);
-        ThN++;
-      }
-    }
-  for(auto& thread :threads){
-    thread.join();
-  }
-
-  cout<<"Out of the parallel section\n\n";
   
-/*
-  PY.MultiplyTilesOnce(PA, PB, 0, 0, 0, 4);
-  PY.MultiplyTilesOnce(PA, PB, 1, 0, 0, 4);
-  PY.MultiplyTilesOnce(PA, PB, 2, 0, 0, 4);
-*/
-
-//  PY.GetResultTile(PA, PB, iterations, 0, 0, tSize);
-//  PY.GetResultTile(PA, PB, iterations, 0, 1, tSize);
-//  PY.GetResultTile(PA, PB, iterations, 1, 0, tSize);
-//  PY.GetResultTile(PA, PB, iterations, 1, 1, tSize);
-//  PY.GetResultTile(PA, PB, iterations, 2, 0, tSize);
-//  PY.GetResultTile(PA, PB, iterations, 2, 1, tSize);
-
-  PY.PrintMatrix();
-
-//  cout<<"Number of Threads: "<<ThN<<endl;
-//  
-//  for(int i = 0; i<p*column_factor; i++){
-//    for(int j=0; j<p*column_factor; j++){
-//      cout<<result[i][j]<<"\t";
-//    }
-//    cout<<"\n";
-//
-//    delete[] result[i];
-//  }
-//  delete[] result;
-
   return 0;
 }

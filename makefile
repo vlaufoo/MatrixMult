@@ -1,51 +1,49 @@
+enable := 1
+disable := 0
+#default block size is 16, but it can be specified to a different number
+block ?= 0
+type ?= 0
 
-#enable=0
-#
-#testing: testing.cpp Classes.h makefile
-#	g++ testing.cpp Classes.h -D VERBOSE -o testing -O0 -Wall 
-#main_old: main_old.o
-#	g++ main_old.o -o main_old
-#main_debug: main_old.cpp Classes.h makefile
-#ifeq($(verbose), $(enable))
-#	g++ main_old.cpp Classes.h -o main_debug -D PRINT_NUMBERS -Wall -std=c++11
-#else
-#	g++ main_old.cpp Classes.h -o main_debug -D VERBOSE -D PRINT_NUMBERS -Wall -std=c++11
-#endif
-#main_old.o: main_old.cpp Classes.h makefile
-#	g++ main_old.cpp Classes.h -c  -Wall -std=c++11
-#
-#.PHONY:clean
-#clean:
-#	rm *.o main_old main_new main_debug
-#.PHONY:tar
-#tar:
-#	tar cfvz MatrixMult.tar.gz *.cpp *.h* makefile
-#
-
-disable=0
-
-main_new: main_new.cpp Tensor.hpp makefile
-	g++ main_new.cpp Tensor.hpp -o main_new -O0 -Wall
-
-testing: testing.cpp Classes.h makefile
-	g++ testing.cpp Classes.h -D PRINT_NUMBERS -D VERBOSE -o testing -Wall 
-
-main_old: main_old.o
-	g++ main_old.o -o main_old
-
-main_debug: main_old.cpp Classes.h makefile
-ifeq ($(verbose), $(disable))
-	g++ main_old.cpp Classes.h -o main_debug -D PRINT_NUMBERS -Wall  
-else
-	g++ main_old.cpp Classes.h -o main_debug -D VERBOSE -D PRINT_NUMBERS -Wall 
+ifneq ($(type), $(disable))
+	DEFINES := -D TYPE=$(type)
 endif
 
-main_old.o: main_old.cpp Classes.h makefile
-	g++ main_old.cpp Classes.h -c -Wall 
+ifneq ($(block), $(disable))
+	DEFINES += -D BLOCK_SIZE=$(block)
+endif
+
+ifeq ($(numbers), $(enable))
+	DEFINES += -D PRINT_NUMBERS
+endif
+
+ifeq ($(debug), $(enable))
+	DEFINES += -D VERBOSE
+endif
+
+ifeq ($(check), $(enable))
+	DEFINES += -D CHECK_RESULT
+endif
+
+all: main_CUDA main_old
+
+main_CUDA: main_old.cpp CudaFunctions.cu Functions.hpp makefile 
+	@./cudaprep.sh
+	nvcc main_old.cpp.cu -gencode arch=compute_61,code=sm_61 -I./Common -o main_CUDA $(DEFINES) -D CUDA
+	@rm *.cpp.cu
+	@echo removed .cpp.cu files
+
+testing: testing.cpp Functions.hpp CudaFunctions.cu makefile
+	#@./cudaprep.sh
+	g++-12 testing.cpp -I./Common $(DEFINES) -o testing
+	#@rm *.cpp.cu
+	#@echo removed .cpp.cu files
+
+main_old: main_old.cpp Functions.hpp makefile
+	g++-12 main_old.cpp -o main_old $(DEFINES) -Wall
 
 .PHONY: clean
 clean:
-	rm *.o main_old main_new main_debug
+	rm *.o main_old main_new main_debug testing
 
 .PHONY: tar
 tar:
