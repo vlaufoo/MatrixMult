@@ -43,7 +43,7 @@ main_old: main_old.cpp Functions.hpp makefile
 
 .PHONY: clean
 clean:
-	rm *.o main_old main_new main_debug testing
+	@rm *.o testing main_old main_CUDA *.cpp.cu
 
 .PHONY: tar
 tar:
