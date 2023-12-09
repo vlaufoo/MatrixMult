@@ -248,32 +248,90 @@ Now we can explore once again the question of why the theoetical estimations wer
 ![Time_vs_operand_FF_vs_rows_optimized.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_optimized.png?raw=true)
 The operation still takes more than anticipated. This added time is reflected also in the results we have already commented on, where we have seen that the new method does not in fact surpass the old one, when it is tested in the best possible conditions (like this case).
 
-
-
 # Conclusions
 In summation, the tiled multiplication experiment has proven reasonably successful. The algorithm has in many cases improved the speed of the multiplication, but has shown in many others its incompatibility with small arrays of processing units. If the number of **parallel** therads was considerably greater than the one used for this experiment, like for example in the use of **GPUs**, the tiles could be much smaller, and the load of the unnecessary operations on padding elements would be shared across many more units. In our case this approach has proven at times extremely inefficient and has been partially improved by the modifications described in the paragraphs above. The overhead caused by padding elements has been completely removed and approaches that were preaviously unusable have become feasable. In its most efficient form, and in the most favorable conditions, the ***original*** tiled multiplication algorithm still won over the ***optimized*** one.
 
+# CUDA variant
+After these tests, another section was added to the program that calls a CUDA kernel, which will be executed on the discrete GPU. This new functionality is only included in the main_CUDA program and requires the CUDA toolkit to be installed on the system and of course a compatible graphics card.
+
+## Basic comcepts of CUDA programming
+Cuda is an interface offered by nvidia to allow General Purpose application development on nvidia GPUs. Our application will use an extremely limited set of the features offered by CUDA, but will nonetheless require an understanding of the formalizations that are used by this programming model to define how the workload is distributed among the many processors in the GPU.
+To define and divide the workload to different degrees of parallelization CUDA defines a hyerarchy of structures. The hyerarchy goes as follows: (with increasing granularity)
+- Streaming Multiprocessors
+- Thread Block Grids
+- Thread Blocks
+- Threads
+Most of the steps in this hyerarchy do not necessarily map to a corresponding hardware structure. In fact above the threads level, the boundaries between different elements at the same granularity level are given by the inherit parallelization of the task, and often also based on memory limitations.
+
+The kernel, which is the function performed concurrently by all threads in the GPU, is again based on the tiled multiplication and reads as follows:
+
+```c++
+template <typename T = int>
+__global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
+{
+  T Cvalue = 0;
+  int bx = blockIdx.x;  int by = blockIdx.y;
+  int tx = threadIdx.x; int ty = threadIdx.y;
+
+  for(int thisTileStart=0; thisTileStart < A.width; thisTileStart+=BLOCK_SIZE){
+    
+    __shared__ T Atile[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ T Btile[BLOCK_SIZE][BLOCK_SIZE];
+
+    Btile[ty][tx] = B.elements[(thisTileStart + ty) * B.width + bx * BLOCK_SIZE + tx];
+    Atile[ty][tx] = A.elements[(by * BLOCK_SIZE + ty) * A.width + (thisTileStart * BLOCK_SIZE) + tx];
+
+    __syncthreads();
+
+    for(int k=0; k < BLOCK_SIZE; k++){
+      Cvalue += Atile[ty][k] * Btile[k][tx];
+    }
+
+    __syncthreads();
+  }
+
+  C.elements[(by * BLOCK_SIZE + ty) * C.width + bx * BLOCK_SIZE + tx] = Cvalue;
+}
+
+```
+First, we initialize to 0 the accumulator for the C matrix value that corresponds to our thread, then we begin the main loop of the multiplication. Here we will move the operands' elements that are required to calculate the tile, from the global device memory to a more quickly accessible memory, akin to cache memory for a CPU, called shared memory. The `__syncthreads()` function is required, between this step and the actual multiplication, to make sure that all the operands are ready to be read. After we make sure of that, we calculate the partial result `Cvalue`, and move on to the next tile.
+It is important to distinguish between the `__shared__` variables and the one with no particular attributes. All shared variables are read by the threads in the same thread block, while other variables, such as `Cvalue` in this case, thread specific, so here will be one for every thread.
+The threads will only ever make a number of multiply and add operations that is equal to `A.Columns() / BLOCK_SIZE`, and only operate on one element of the result matrix, updating its partial result using their own `Cvalue`.
+
+The main difference of this approach with the one writen for the CPU is that the block size here is fixed, and the thread number depends on the matrix size. The execution time of the whole multiplication is reduced to the one of `A.Columns() / BLOCK_SIZE` multiply and add operations.
+The drastic improvement that followed from usign a much more parallel Processing Unit is summarized in the following graphs:
+
+![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
+![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
+
+The first graph shows the speedup obtained relative to the optimized implementation of the tiled multiplication on CPU. In this comparison the addition of padding (which is necessary for the CUDA version, but is completely skipped for the CPU version) is included in the count. So the extreme speed of the multiplication itself is absorbing the cost of the overhead in thhe CUDA implementation.
+The second image instead shows curves that have been obtained as the difference between the unoptimized CPU times and the CUDA times. If we consider that for a given `BLOCK_SIZE`, the execution time of the mutiplication on the GPU is fixed, the only component that should vary with the size of the operands is the time taken by the padding process. The same process is also included in he CPU version 
+$$={FF_{op} \times FF_{res} \times R^3 \over T}+OH={MADD \over T}+OH$$
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
 ```
-make main_old
-
+make [check] [block] [debug] [numbers]
+```
+Where:
+- check is used to add a result validity check for every iteration (used for testing) by setting it to 1 and is 0 by default.
+- block is the value that will be used as the side dimension of the square thread block in the cuda kernel call.
+- debug and numbers are more flags used for testing, and control the amount of information printed to stdout. Both are 0 by default.
+and then
+```
 ./main_old <threads> <random_seed> <step_n> <step_size> <operand_FF> <result_FF> <starting_step>
 ```
-`threads` is the number of threads to be used, and **forces** the program to use that many to make the multiplication, even if the corresponding tiling is extremely wateful (e.g. in the case of a square matrix, when `threads` is 2).
+or
+```
+./main_CUDA <threads> <random_seed> <step_n> <step_size> <operand_FF> <result_FF> <starting_step>
+```
+Where:
+- `threads` is the number of threads to be used, and **forces** the program to use that many to make the multiplication, even if the corresponding tiling is extremely wateful (e.g. in the case of a square matrix, when `threads` is 2).
 
-`random_seed` is the seed used to randomly generate the matrix, and is given as an argument to make it easier to replicate the same testing conditions.
+- `random_seed` is the seed used to randomly generate the matrix, and is given as an argument to make it easier to replicate the same testing conditions.
 
-`step_n` `step_size` and `starting_step` are the number of steps by which the matrix size will be increased, and then the size of the steps, and the step from which the program will start.
+- `step_n` `step_size` and `starting_step` are the number of steps by which the matrix size will be increased, and then the size of the steps, and the step from which the program will start.
 
-Finally `operand_FF` and `result_FF` are the two form factors mentioned in the exposition of the previous graphs.
-
-Some other make targets are included:
-- `make_debug`: is essentially the same as main_old, but when compiled with `make verbose=0 main_debug` outputs the matrices to the output buffer, and if compiled with `make verbose=1 main_debug` also outputs debug information, also by many threads at once, but keeping the messages readable.
-  
-- `make testing`: a smaller target used for testing purposes
-  
-- The [Rewind](https://github.com/vlaufoo/MatrixMult/tree/master/Rewind) folder, which also contains another `Tensor` class, with a few new methods, to extend the usecases of the original program.
+- `operand_FF` and `result_FF` are the two form factors mentioned in the exposition of the previous graphs.
 
 </div>
