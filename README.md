@@ -264,12 +264,28 @@ To define and divide the workload to different degrees of parallelization CUDA d
 Most of the steps in this hyerarchy do not necessarily map to a corresponding hardware structure. In fact above the threads level, the boundaries between different elements at the same granularity level are given by the inherit parallelization of the task, and often also based on memory limitations.
 
 The kernel, which is the function performed concurrently by all threads in the GPU, is again based on the tiled multiplication and reads as follows:
+```c++
+template <typename T = int>
+__global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
+{
+  T Cvalue = 0;
+  int row = blockIdx.y * blockDim.y + threadIdx.x;
+  int column = blockIdx.x * blockDim.x + threadIdx.y;
 
+
+  for(int i=0; i<A.width; i++){
+    Cvalue += A.elements[row * A.width + i] * B.elements[i * B.width + column];
+  }
+
+  C.elements[row * C.width + column] = Cvalue;
+}
+```
+In this kernel, each thread, identified by its indices, `threadIdx.x` and `threadIdx.y` calculates one element of the matrix `C`. The following graphs show the speedup relative to the optimized CPU opration, and the difference in execution times relative to the unoptimized CPU operation.
 
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
 
-
+From the first graph we can conclude that the CUDA version takes an amount of time grat grows like a poynomial one order lower than the CPU version. We have already concluded that the CPU operation is proportional to $R^3$, so the CUDA version must be proportional to $R^2$.
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
@@ -279,6 +295,7 @@ make [check] [block] [debug] [numbers]
 Where:
 - check is used to add a result validity check for every iteration (used for testing) by setting it to 1 and is 0 by default.
 - block is the value that will be used as the side dimension of the square thread block in the cuda kernel call.
+- type is used to define the type of the matrices' elements. The templates all have a default value of `int`, but with this flag that can be changed.
 - debug and numbers are more flags used for testing, and control the amount of information printed to stdout. Both are 0 by default.
 and then
 ```
