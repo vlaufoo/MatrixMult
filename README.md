@@ -265,48 +265,11 @@ Most of the steps in this hyerarchy do not necessarily map to a corresponding ha
 
 The kernel, which is the function performed concurrently by all threads in the GPU, is again based on the tiled multiplication and reads as follows:
 
-```c++
-template <typename T = int>
-__global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
-{
-  T Cvalue = 0;
-  int bx = blockIdx.x;  int by = blockIdx.y;
-  int tx = threadIdx.x; int ty = threadIdx.y;
-
-  for(int thisTileStart=0; thisTileStart < A.width; thisTileStart+=BLOCK_SIZE){
-    
-    __shared__ T Atile[BLOCK_SIZE][BLOCK_SIZE];
-    __shared__ T Btile[BLOCK_SIZE][BLOCK_SIZE];
-
-    Btile[ty][tx] = B.elements[(thisTileStart + ty) * B.width + bx * BLOCK_SIZE + tx];
-    Atile[ty][tx] = A.elements[(by * BLOCK_SIZE + ty) * A.width + (thisTileStart * BLOCK_SIZE) + tx];
-
-    __syncthreads();
-
-    for(int k=0; k < BLOCK_SIZE; k++){
-      Cvalue += Atile[ty][k] * Btile[k][tx];
-    }
-
-    __syncthreads();
-  }
-
-  C.elements[(by * BLOCK_SIZE + ty) * C.width + bx * BLOCK_SIZE + tx] = Cvalue;
-}
-
-```
-First, we initialize to 0 the accumulator for the C matrix value that corresponds to our thread, then we begin the main loop of the multiplication. Here we will move the operands' elements that are required to calculate the tile, from the global device memory to a more quickly accessible memory, akin to cache memory for a CPU, called shared memory. The `__syncthreads()` function is required, between this step and the actual multiplication, to make sure that all the operands are ready to be read. After we make sure of that, we calculate the partial result `Cvalue`, and move on to the next tile.
-It is important to distinguish between the `__shared__` variables and the one with no particular attributes. All shared variables are read by the threads in the same thread block, while other variables, such as `Cvalue` in this case, thread specific, so here will be one for every thread.
-The threads will only ever make a number of multiply and add operations that is equal to `A.Columns() / BLOCK_SIZE`, and only operate on one element of the result matrix, updating its partial result using their own `Cvalue`.
-
-The main difference of this approach with the one writen for the CPU is that the block size here is fixed, and the thread number depends on the matrix size. The execution time of the whole multiplication is reduced to the one of `A.Columns() / BLOCK_SIZE` multiply and add operations.
-The drastic improvement that followed from usign a much more parallel Processing Unit is summarized in the following graphs:
 
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
 
-The first graph shows the speedup obtained relative to the optimized implementation of the tiled multiplication on CPU. In this comparison the addition of padding (which is necessary for the CUDA version, but is completely skipped for the CPU version) is included in the count. So the extreme speed of the multiplication itself is absorbing the cost of the overhead in thhe CUDA implementation.
-The second image instead shows curves that have been obtained as the difference between the unoptimized CPU times and the CUDA times. If we consider that for a given `BLOCK_SIZE`, the execution time of the mutiplication on the GPU is fixed, the only component that should vary with the size of the operands is the time taken by the padding process. The same process is also included in he CPU version 
-$$={FF_{op} \times FF_{res} \times R^3 \over T}+OH={MADD \over T}+OH$$
+
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
