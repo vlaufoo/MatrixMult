@@ -109,7 +109,7 @@ int main(int argc, char **argv){
 
 //NOW THE SECTION THAT USES CUDA
 #ifdef CUDA
-
+/*
     double cuda_tiled_time = CudaMult<TYPE>(A, B, T, Rdiv, Cdiv, 1);
 #ifdef CHECK_RESULT
     if(!(X == T)){
@@ -118,8 +118,8 @@ int main(int argc, char **argv){
       cuda_tiled_failures++;
     }
 #endif
+*/
 
-/*
     double cuda_normal_time = CudaMult<TYPE>(A, B, T, Rdiv, Cdiv, 0);
 #ifdef CHECK_RESULT
     if(!(X == T)){
@@ -128,9 +128,9 @@ int main(int argc, char **argv){
       cuda_normal_failures++;
     }
 #endif
-*/
 
-    cuda_speedup[p] = (serial_time/cuda_tiled_time);
+
+    cuda_speedup[p] = (serial_time/cuda_normal_time);
 #endif
 
     if(p == max){
@@ -181,8 +181,8 @@ int main(int argc, char **argv){
               optimized_time,
               speedup[p],
               BLOCK_SIZE,
-//              cuda_normal_time,
-              cuda_tiled_time,
+              cuda_normal_time,
+//              cuda_tiled_time,
               cuda_speedup[p]
              );
 
@@ -200,8 +200,8 @@ int main(int argc, char **argv){
               optimized_time,
               speedup[p],
               BLOCK_SIZE,
-//              cuda_normal_time,
-              cuda_tiled_time,
+              cuda_normal_time,
+//              cuda_tiled_time,
               cuda_speedup[p]
              );
 #endif

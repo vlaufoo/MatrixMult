@@ -55,7 +55,6 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int Rdiv, const 
   Matrix<T> CB = B.AddTilingPaddingColumns(BLOCK_SIZE);
   Matrix<T> CC = C.AddTilingPadding(BLOCK_SIZE);
 
-  clock_t tic = clock(); //-----------------------------------------------------------------------------
   struct mat<T> h_A, h_B, h_C;
 
   //h for host
@@ -114,6 +113,7 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int Rdiv, const 
   checkCudaErrors(cudaMemcpy(d_B.elements, h_B.elements, Bsize, cudaMemcpyHostToDevice));
   //C will be populated when it's calculated
 
+  clock_t tic = clock(); //-----------------------------------------------------------------------------
   dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
   dim3 dimGrid(h_B.width / dimBlock.x, h_A.height / dimBlock.y);
 
@@ -123,9 +123,9 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int Rdiv, const 
 #endif
 
   if(tiled_mode){
-    CudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
-  }else{
     TiledCudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
+  }else{
+    CudaMultKernel<<< dimGrid, dimBlock >>>(d_A, d_B, d_C);
   }
 
   checkCudaErrors(cudaMemcpy(h_C.elements, d_C.elements, Csize, cudaMemcpyDeviceToHost));
