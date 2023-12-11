@@ -284,7 +284,7 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
   C.elements[row * C.width + column] = Cvalue;
 }
 ```
-In this kernel, each thread, identified by its indices, `threadIdx.x` and `threadIdx.y` calculates one element of the matrix `C`. The following graphs show the speedup relative to the optimized CPU opration, and the difference in execution times relative to the unoptimized CPU operation. All of these graphs are obtained from a program compiled for float operations, through the use of templates.
+In this kernel, each thread, identified by its indices, `threadIdx.x` and `threadIdx.y` calculates one element of the matrix `C`. The following graphs show the speedup relative to the optimized CPU opration, and the difference in execution times relative to the unoptimized CPU operation. All of these graphs are obtained from a program compiled for float operations, through the use of templates, and with operand matrices with 1.3 form factor and square result matrices.
 
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
