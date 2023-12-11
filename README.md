@@ -284,12 +284,14 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
   C.elements[row * C.width + column] = Cvalue;
 }
 ```
-In this kernel, each thread, identified by its indices, `threadIdx.x` and `threadIdx.y` calculates one element of the matrix `C`. The following graphs show the speedup relative to the optimized CPU opration, and the difference in execution times relative to the unoptimized CPU operation. All of these graphs are obtained from a program compiled for float operations, through the use of templates, and with operand matrices with 1.3 form factor and square result matrices.
+With this kernel, each thread, identified by its indices, `threadIdx.x` and `threadIdx.y` calculates one element of the matrix `C`. The following graphs show the speedup relative to the optimized CPU opration, and the difference in execution times relative to the unoptimized CPU operation. All of these graphs are obtained from a program compiled for float operations, through the use of templates, and with operand matrices with 1:2 form factor and square result matrices.
 
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
 
-From the first graph we can conclude that the CUDA version takes an amount of time grat grows like a poynomial one order lower than the CPU version. We have already concluded that the CPU operation is proportional to $R^3$, so the CUDA version must be proportional to $R^2$.
+The following and final figure shows the measured times across different matrix dimensions, and compares it with a polynomial of the third order, showing that even though the time is considerably lower, it is still proportional to the number of multiply and add operations (and more importantly, to the number of memory accesses).
+
+
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
