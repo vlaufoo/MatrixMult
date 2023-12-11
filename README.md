@@ -265,6 +265,8 @@ To define and divide the workload to different degrees of parallelization CUDA d
 
 Most of the steps in this hierarchy do not necessarily map to a corresponding hardware structure. In fact above the threads level, the boundaries between different elements at the same level are given by the intrinsic parallelization of the task, and are often also based on memory limitations.
 
+## Our kernel
+
 The kernel, which is the function performed concurrently by all threads in the GPU, is similar to the one performed in the optimized CPU operation and reads as follows:
 ```c++
 template <typename T = int>
@@ -282,7 +284,7 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
   C.elements[row * C.width + column] = Cvalue;
 }
 ```
-In this kernel, each thread, identified by its indices, `threadIdx.x` and `threadIdx.y` calculates one element of the matrix `C`. The following graphs show the speedup relative to the optimized CPU opration, and the difference in execution times relative to the unoptimized CPU operation.
+In this kernel, each thread, identified by its indices, `threadIdx.x` and `threadIdx.y` calculates one element of the matrix `C`. The following graphs show the speedup relative to the optimized CPU opration, and the difference in execution times relative to the unoptimized CPU operation. All of these graphs are obtained from a program compiled for float operations, thanks to the use of templates.
 
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
