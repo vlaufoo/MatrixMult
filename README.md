@@ -7,6 +7,7 @@
 - [Test Results](https://github.com/vlaufoo/MatrixMult#test-results)
 - [Optimizations](https://github.com/vlaufoo/MatrixMult#optimizations)
 - [Conslusions](https://github.com/vlaufoo/MatrixMult#Conclusions)
+- [CUDA Variant](https://github.com/vlaufoo/MatrixMult/tree/master#cuda-variant)
 - [Compiling](https://github.com/vlaufoo/MatrixMult#compilation)
 
 # Tiled Multiplication
