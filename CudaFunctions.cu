@@ -80,7 +80,7 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int Rdiv, const 
   checkCudaErrors(cudaMallocHost(&h_B.elements, Bsize));
   checkCudaErrors(cudaMallocHost(&h_C.elements, Csize));
 
-
+  clock_t tic = clock(); //-----------------------------------------------------------------------------
 
   CA.BlurtMatrix(h_A.elements);
   CB.BlurtMatrix(h_B.elements);
@@ -113,7 +113,6 @@ double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int Rdiv, const 
   checkCudaErrors(cudaMemcpy(d_B.elements, h_B.elements, Bsize, cudaMemcpyHostToDevice));
   //C will be populated when it's calculated
 
-  clock_t tic = clock(); //-----------------------------------------------------------------------------
   dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
   dim3 dimGrid(h_B.width / dimBlock.x, h_A.height / dimBlock.y);
 
