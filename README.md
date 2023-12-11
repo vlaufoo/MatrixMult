@@ -255,7 +255,7 @@ In summation, the tiled multiplication experiment has proven reasonably successf
 # CUDA variant
 After these tests, another section was added to the program that calls a CUDA kernel, which will be executed on the discrete GPU. This new functionality is only included in the main_CUDA program and requires the CUDA toolkit to be installed on the system and of course a compatible graphics card.
 
-## Basic comcepts of CUDA programming
+## Basic concepts of CUDA programming
 Cuda is an interface offered by nvidia to allow General Purpose application development on nvidia GPUs. Our application will use an extremely limited set of the features offered by CUDA, but will nonetheless require an understanding of the formalizations that are used by this programming model to define how the workload is distributed among the many processors in the GPU.
 To define and divide the workload to different degrees of parallelization CUDA defines a hyerarchy of structures. The hyerarchy goes as follows (with increasing parallelism): 
 - Streaming Multiprocessors
