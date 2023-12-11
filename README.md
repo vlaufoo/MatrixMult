@@ -289,7 +289,7 @@ With this kernel, each thread, identified by its indices, `threadIdx.x` and `thr
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
 
-The following and final figure shows the measured times across different matrix dimensions, and compares it with a polynomial of the third order, showing that even though the time is considerably lower, it is still proportional to the number of multiply and add operations (and more importantly, to the number of memory accesses). The value of $$T_access$$ was simply obtained through trial and error.
+The following and final figure shows the measured times across different matrix dimensions, and compares it with a polynomial of the third order, showing that even though the time is considerably lower, it is still proportional to the number of multiply and add operations (and more importantly, to the number of memory accesses). The value of $T_{access}$ was simply obtained through trial and error.
 
 ![Cuda_time_vs_model.png](https://github.com/vlaufoo/MatrixMult/blob/master/CUDA_time_vs_model.png?raw=true)
 
