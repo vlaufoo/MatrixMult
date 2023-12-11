@@ -256,14 +256,15 @@ After these tests, another section was added to the program that calls a CUDA ke
 
 ## Basic comcepts of CUDA programming
 Cuda is an interface offered by nvidia to allow General Purpose application development on nvidia GPUs. Our application will use an extremely limited set of the features offered by CUDA, but will nonetheless require an understanding of the formalizations that are used by this programming model to define how the workload is distributed among the many processors in the GPU.
-To define and divide the workload to different degrees of parallelization CUDA defines a hyerarchy of structures. The hyerarchy goes as follows: (with increasing granularity)
+To define and divide the workload to different degrees of parallelization CUDA defines a hyerarchy of structures. The hyerarchy goes as follows (with increasing parallelism): 
 - Streaming Multiprocessors
 - Thread Block Grids
 - Thread Blocks
 - Threads
-Most of the steps in this hyerarchy do not necessarily map to a corresponding hardware structure. In fact above the threads level, the boundaries between different elements at the same granularity level are given by the inherit parallelization of the task, and often also based on memory limitations.
 
-The kernel, which is the function performed concurrently by all threads in the GPU, is again based on the tiled multiplication and reads as follows:
+Most of the steps in this hierarchy do not necessarily map to a corresponding hardware structure. In fact above the threads level, the boundaries between different elements at the same level are given by the inherit parallelization of the task, and are often also based on memory limitations.
+
+The kernel, which is the function performed concurrently by all threads in the GPU, is similar to the one performed in the optimized CPU operation and reads as follows:
 ```c++
 template <typename T = int>
 __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
