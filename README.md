@@ -263,7 +263,7 @@ To define and divide the workload to different degrees of parallelization CUDA d
 - Thread Blocks
 - Threads
 
-Most of the steps in this hierarchy do not necessarily map to a corresponding hardware structure. In fact above the threads level, the boundaries between different elements at the same level are given by the inherit parallelization of the task, and are often also based on memory limitations.
+Most of the steps in this hierarchy do not necessarily map to a corresponding hardware structure. In fact above the threads level, the boundaries between different elements at the same level are given by the intrinsic parallelization of the task, and are often also based on memory limitations.
 
 The kernel, which is the function performed concurrently by all threads in the GPU, is similar to the one performed in the optimized CPU operation and reads as follows:
 ```c++
