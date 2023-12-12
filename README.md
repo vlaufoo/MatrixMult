@@ -206,7 +206,7 @@ In this picture, we have plotted the data extracted from the test program, and c
 $$t_{EX}={R^3 \times FF_{op} \times FF_{res} \times t_{MADD} \over 4}$$
 except that in this case the result matrix was always square, so:
 $$t_{EX}={R^3 \times FF_{op} \times t_{MADD} \over 4}$$
-The value of $t_{MADD}$ was calculated from the dataset, as the average of ${t_{EX} \over R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***. The comparison with the ideal case clearly underlines the presence of **overhead**, increasing proportionally with $R^3$.
+The value of $t_{MADD}$ was calculated from the dataset, as the average of ${t_{EX} \over R^3}$ with $FF_{op} = 1$ and $FF_{res} = 1$, and was estimated at ***3.3 ns***. The comparison with the ideal case clearly underlines the presence of **overhead**, increasing proportionally with $R^3$. This addition must be due to the memory bandwidth, and the frequency with which we access memory, and is in fact what sets the lower bound of our execution time, unless it is optimized in turn.
 
 ![Time_vs_operand_FF_vs_rows_Serial.png](https://github.com/vlaufoo/MatrixMult/blob/master/Time_vs_operand_FF_vs_rows_Serial.png?raw=true)
 The serial operation is instead well modeled, as seen in the above picture.
@@ -289,7 +289,7 @@ With this kernel, each thread, identified by its indices, `threadIdx.x` and `thr
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
 
-The following and final figure shows the measured times across different matrix dimensions, and compares it with a polynomial of the third order, showing that even though the time is considerably lower, it is still proportional to the number of multiply and add operations (and more importantly, to the number of memory accesses). The value of $T_{access}$ was simply obtained through trial and error.
+The following and final figure shows the measured times across different matrix dimensions, and compares it with a polynomial of the third order, showing that even though the time is considerably lower, it is still proportional to the number of memory accesses. The value of $T_{access}$ was simply obtained through trial and error.
 
 ![Cuda_time_vs_model.png](https://github.com/vlaufoo/MatrixMult/blob/master/CUDA_time_vs_model.png?raw=true)
 
