@@ -289,7 +289,7 @@ With this kernel, each thread, identified by its indices, `threadIdx.x` and `thr
 ![Cuda_vs_CPUtile_ratio.png](https://github.com/vlaufoo/MatrixMult/blob/master/Cuda_vs_CPUtile_ratio.png?raw=true)
 ![CPU_time_vs_cuda_time.png](https://github.com/vlaufoo/MatrixMult/blob/master/CPU_time_vs_cuda_time.png?raw=true)
 
-The following and final figure shows the measured times across different matrix dimensions, and compares it with a polynomial of the third order, showing that even though the time is considerably lower, it is still proportional to the number of memory accesses. The value of $T_{access}$ was simply obtained through trial and error. The algorithm used in the kernel is essentially identical to the one used in the optimized CPU operation and the degree to which the task was parallelized is comparable too. The speed increase of an order of magnitude was in this case mainly given by the use of faster memory, and a better allocation of it.
+The following and final figure shows the measured times across different matrix dimensions, and compares it with a polynomial of the third order, showing that even though the time is considerably lower, it is still proportional to the number of memory accesses. The value of $T_{access}$ was simply obtained through trial and error. The algorithm used in the kernel is essentially identical to the one used in the optimized CPU operation and the degree to which the task was parallelized is comparable too. The speed increase, of an order of magnitude, was mainly given by the use of faster memory, and a better allocation of it.
 
 ![Cuda_time_vs_model.png](https://github.com/vlaufoo/MatrixMult/blob/master/CUDA_time_vs_model.png?raw=true)
 
