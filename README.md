@@ -293,7 +293,7 @@ The following and final figure shows the measured times across different matrix 
 
 ![Cuda_time_vs_model.png](https://github.com/vlaufoo/MatrixMult/blob/master/CUDA_time_vs_model.png?raw=true)
 
-The algorithm used in the kernel is essentially identical to the one used in the optimized CPU operation and the degree to which the task was parallelized is comparable too. The speed increase, of an order of magnitude, was mainly given by the use of faster memory, and a better allocation of it.
+The algorithm used in the kernel is essentially identical to the one used in the optimized CPU operation and the degree to which the task was parallelized is comparable too. The speed increase, which grew linearly with matrix size, was primarily due to the use of faster memory and its improved allocation.
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
