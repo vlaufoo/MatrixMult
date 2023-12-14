@@ -33,10 +33,10 @@ main_CUDA: main_old.cpp CudaFunctions.cu Functions.hpp makefile
 	@echo removed .cpp.cu files
 
 testing: testing.cpp Functions.hpp CudaFunctions.cu makefile
-	#@./cudaprep.sh
-	g++-12 testing.cpp -I./Common $(DEFINES) -o testing
-	#@rm *.cpp.cu
-	#@echo removed .cpp.cu files
+	cp testing.cpp testing.cpp.cu
+	nvcc testing.cpp.cu -I./Common $(DEFINES) -D CUDA -o testing
+	rm *.cpp.cu
+	echo removed .cpp.cu files
 
 main_old: main_old.cpp Functions.hpp makefile
 	g++-12 main_old.cpp -o main_old $(DEFINES) -Wall

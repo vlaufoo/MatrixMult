@@ -109,28 +109,26 @@ int main(int argc, char **argv){
 
 //NOW THE SECTION THAT USES CUDA
 #ifdef CUDA
-/*
-    double cuda_tiled_time = CudaMult<TYPE>(A, B, T, Rdiv, Cdiv, 1);
+    double cuda_tiled_time = CudaMult<TYPE>(A, B, T, 1);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\n\033[1;37;41mTiled cuda op. has failed!\033[0m\n\n";
-      //return 4;
+      return 4;
       cuda_tiled_failures++;
     }
 #endif
-*/
 
-    double cuda_normal_time = CudaMult<TYPE>(A, B, T, Rdiv, Cdiv, 0);
+    double cuda_normal_time = CudaMult<TYPE>(A, B, T, 0);
 #ifdef CHECK_RESULT
     if(!(X == T)){
       cout<<"\n\n\033[1;37;41mNormal cuda op. has failed!\033[0m\n\n";
-      //return 3;
+      return 3;
       cuda_normal_failures++;
     }
 #endif
 
 
-    cuda_speedup[p] = (serial_time/cuda_normal_time);
+    cuda_speedup[p] = (serial_time/min(cuda_normal_time, cuda_tiled_time));
 #endif
 
     if(p == max){
@@ -141,7 +139,7 @@ int main(int argc, char **argv){
       fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
-              ThN, //ThN, previously confirmed the length of the thread vector, now useless
+              ThN,
               tSize,
               form_factor_operands,
               form_factor_result,
@@ -156,7 +154,7 @@ int main(int argc, char **argv){
       printf("%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
-              ThN, //ThN, previously confirmed the length of the thread vector, now useless
+              ThN, 
               tSize,
               form_factor_operands,
               form_factor_result,
@@ -165,14 +163,13 @@ int main(int argc, char **argv){
               optimized_time,
               speedup[p]
              );
-      //segnare miglior risultato per curiosità
 #endif
 
 #ifdef CUDA
-      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
+      fprintf(fp, "%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
-              ThN, //ThN, previously confirmed the length of the thread vector, now useless
+              ThN, 
               tSize,
               form_factor_operands,
               form_factor_result,
@@ -182,13 +179,13 @@ int main(int argc, char **argv){
               speedup[p],
               BLOCK_SIZE,
               cuda_normal_time,
-//              cuda_tiled_time,
+              cuda_tiled_time,
               cuda_speedup[p]
              );
 
 
 
-      printf("%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t\n", 
+      printf("%d\t%d\t%d\t%d\t%2f\t%2f\t%5f\t%5f\t%5f\t%5f\t%d\t%5f\t%5f\t%5f\t\n", 
               X.Rows(),
               X.Columns(),
               ThN, //ThN, previously confirmed the length of the thread vector, now useless
@@ -201,7 +198,7 @@ int main(int argc, char **argv){
               speedup[p],
               BLOCK_SIZE,
               cuda_normal_time,
-//              cuda_tiled_time,
+              cuda_tiled_time,
               cuda_speedup[p]
              );
 #endif
@@ -210,10 +207,6 @@ int main(int argc, char **argv){
     fclose(fp);
   }
 
-#ifdef CUDA
-  cout<<"Tiled Cuda Failures: "<<cuda_tiled_failures<<endl;
-  cout<<"Normal Cuda Failures: "<<cuda_normal_failures<<endl;
-#endif
 
   return 0;
 }

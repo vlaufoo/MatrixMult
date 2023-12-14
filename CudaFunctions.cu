@@ -5,6 +5,7 @@
 template <typename T = int>
 __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
 {
+  
   T Cvalue = 0;
   int row = blockIdx.y * blockDim.y + threadIdx.x;
   int column = blockIdx.x * blockDim.x + threadIdx.y;
@@ -17,9 +18,11 @@ __global__ void CudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C
   C.elements[row * C.width + column] = Cvalue;
 }
 
+
 template <typename T = int>
 __global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
 {
+
   T Cvalue = 0;
   int bx = blockIdx.x;  int by = blockIdx.y;
   int tx = threadIdx.x; int ty = threadIdx.y;
@@ -30,9 +33,11 @@ __global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat
     __shared__ T Btile[BLOCK_SIZE][BLOCK_SIZE];
 
     Btile[ty][tx] = B.elements[(thisTileStart + ty) * B.width + bx * BLOCK_SIZE + tx];
-    Atile[ty][tx] = A.elements[(by * BLOCK_SIZE + ty) * A.width + (thisTileStart * BLOCK_SIZE) + tx];
+    Atile[ty][tx] = A.elements[(by * BLOCK_SIZE + ty) * A.width + thisTileStart + tx];
 
     __syncthreads();
+
+#pragma unroll
 
     for(int k=0; k < BLOCK_SIZE; k++){
       Cvalue += Atile[ty][k] * Btile[k][tx];
@@ -45,15 +50,24 @@ __global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat
 }
 
 
+
 template <typename T = int>
-double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, const int Rdiv, const int Cdiv, bool tiled_mode)
+double CudaMult(Matrix<T>& A, Matrix<T>& B, Matrix<T>& C, bool tiled_mode)
 //BLOCK_SIZE deve essere potenza di due, o meglio è preferibile che lo sia
 {
   using namespace std;
 
-  Matrix<T> CA = A.AddTilingPaddingRows(BLOCK_SIZE);
-  Matrix<T> CB = B.AddTilingPaddingColumns(BLOCK_SIZE);
-  Matrix<T> CC = C.AddTilingPadding(BLOCK_SIZE);
+  Matrix<T> CA, CB, CC;
+
+  if(!tiled_mode){
+    CA = A.AddTilingPaddingRows(BLOCK_SIZE);
+    CB = B.AddTilingPaddingColumns(BLOCK_SIZE);
+    CC = C.AddTilingPadding(BLOCK_SIZE);
+  }else{
+    CA = A.AddTilingPadding(BLOCK_SIZE);
+    CB = B.AddTilingPadding(BLOCK_SIZE);
+    CC = C.AddTilingPadding(BLOCK_SIZE);
+  }
 
   struct mat<T> h_A, h_B, h_C;
 

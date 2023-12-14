@@ -1,27 +1,44 @@
-#include"Functions.hpp"
+#include "Functions.hpp"
 
 #define TYPE int
 
 int main(int argc, char** argv){
   using namespace std;
-  Matrix<TYPE> A(240, 240);
-  Matrix<TYPE> B(240, 480);
+  Matrix<TYPE> A(80, 50);
+  Matrix<TYPE> B(50, 500);
 
   Matrix<TYPE> C(A.Rows(), B.Columns());
   Matrix<TYPE> T = C;
 
-  A.RandomMatrix(0, 60, 94234852);
-  B.RandomMatrix(0, 60, 12334564);
+  A.RandomMatrix(1, 40, 94234852);
+  B.RandomMatrix(1, 100, 12334564);
 
-  int Rdiv, Cdiv;
+  C=A*B;
 
-  int tSize = BestSquareTiling<TYPE>(A, B, 2, 6, Rdiv, Cdiv);
+  T.ZeroMatrix();
 
-  Matrix<TYPE> PC = C.ForceAddTilingPadding(tSize, Rdiv, Cdiv);
+  double cuda_tile_t = CudaMult(A, B, T, 1);
 
-  cout<<"\n\nRows of tiles: "<<PC.Rows()/tSize<<" while Rdiv is "<<Rdiv<<"\n\n";
-  cout<<"\n\nCols of tiles: "<<PC.Columns()/tSize<<" while Cdiv is "<<Cdiv<<"\n\n";
 
-  
+  T.PrintMatrix();
+  int always_less = 1;
+  int count = 0;
+  for(int i=0; i<T.Rows(); i++){
+    for(int j=0; j<T.Columns(); j++){
+      cout<<T.GetElement(i, j)<<"\t"<<C.GetElement(i, j)
+        //<<"\t"<<A.GetElement(i, j)
+        <<endl;
+      if(T.GetElement(i, j) > C.GetElement(i, j)){
+        cout<<i<<", "<<j<<":\t"
+          <<T.GetElement(i, j)<<"\t!=\t"<<C.GetElement(i, j)<<endl;
+        always_less = 0;
+        count++;
+        cout<<"^^^ Here!----------------------------\n";
+      }
+    }
+  }
+  cout<<"Result: \n"<< (T==C)<<endl<<always_less<<endl;
+  cout<<"Error count = "<<count<<endl;
+
   return 0;
 }
