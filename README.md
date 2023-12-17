@@ -293,7 +293,47 @@ The following and final figure shows the measured times across different matrix 
 
 ![Cuda_time_vs_model.png](https://github.com/vlaufoo/MatrixMult/blob/master/CUDA_time_vs_model.png?raw=true)
 
-The algorithm used in the kernel is essentially identical to the one used in the optimized CPU operation and the degree to which the task was parallelized is comparable too. The speed increase, which grew linearly with matrix size, was primarily due to the use of faster memory and its improved allocation.
+The algorithm used in the kernel is essentially identical to the one used in the optimized CPU operation and the degree to which the task was parallelized is comparable too. The speed increase, which grew linearly with matrix size, was primarily due to the use of faster memory and its improved allocation. We can obtain even better results with a tiled version of the kernel, compounding the speed increas given by the quicker memory and the one given by the reduced amount of memory transactions.
+Here is the modified kernel:
+
+```c++
+template <typename T = int>
+__global__ void TiledCudaMultKernel(struct mat<T> A, struct mat<T> B, struct mat<T> C)
+{
+
+  T Cvalue = 0;
+  int bx = blockIdx.x;  int by = blockIdx.y;
+  int tx = threadIdx.x; int ty = threadIdx.y;
+
+  for(int thisTileStart=0; thisTileStart < A.width; thisTileStart+=BLOCK_SIZE){
+    
+    __shared__ T Atile[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ T Btile[BLOCK_SIZE][BLOCK_SIZE];
+
+    Btile[ty][tx] = B.elements[(thisTileStart + ty) * B.width + bx * BLOCK_SIZE + tx];
+    Atile[ty][tx] = A.elements[(by * BLOCK_SIZE + ty) * A.width + thisTileStart + tx];
+
+    __syncthreads();
+
+#pragma unroll
+
+    for(int k=0; k < BLOCK_SIZE; k++){
+      Cvalue += Atile[ty][k] * Btile[k][tx];
+    }
+
+    __syncthreads();
+  }
+
+  C.elements[(by * BLOCK_SIZE + ty) * C.width + bx * BLOCK_SIZE + tx] = Cvalue;
+}
+
+```
+The improvement lies with the __shared__ attribute. This attribute is used in CUDA to allocate memory in a shared space among the threads of a block. This memory, akin to cache in a CPU, has much higher bandwidth.
+So now, instead of constantly reading from global memory, we make a read from it only to bring a tile from each of the operands into shared memory, and perform more than one operation on the transferred tiles.
+
+![Tiled_CUDA_comparison.png](https://github.com/vlaufoo/MatrixMult/blob/master/Tiled_CUDA_comparison.png?raw=true)
+
+The speed is quadrupled.
 
 # Compilation
 The log program used for this experiment is compilable through the `main_old` make target, and can then be run, giving the intended 7 arguments:
